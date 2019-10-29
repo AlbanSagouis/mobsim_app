@@ -129,10 +129,13 @@ output$info <- renderUI({
 })
 
  
+## point coordinates
+### storing coordinates
 observeEvent(input$plot_click, {
-add_row = data.frame(x = input$plot_click$x,
-						 y = input$plot_click$y,
-						 species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")))
+add_row = data.frame(species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")),
+							x = input$plot_click$x,
+							y = input$plot_click$y
+						 )
 values$DT = rbind(values$DT, add_row)
 })
 	 
@@ -147,24 +150,36 @@ observeEvent(input$rem_point, {
  values$DT = rem_row
 })
 
-## point coordinates
+### showing coordinates in a text box
 output$info <- renderText({
-	xy_str <- function(e) {
-		if(is.null(e)) return("NULL\n")
-		paste0("x=", round(e$x, 1), " y=", round(e$y, 1), "\n")
+if (input$method_type != "click_for_mother_points")	{
+		return()
+	} else {
+		xy_str <- function(e) {
+			if(is.null(e)) return("")
+			paste0("x=", round(e$x, 1), " y=", round(e$y, 1), "\n")
+		}
+		xy_range_str <- function(e) {
+			if(is.null(e)) return("")
+			paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1), 
+					 " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
+		}
+		
+		paste0(
+			"click: ", xy_str(input$plot_click),
+			"brush: ", xy_range_str(input$plot_brush)
+		)
 	}
-	xy_range_str <- function(e) {
-		if(is.null(e)) return("NULL\n")
-		paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1), 
-				 " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
-	}
-	paste0(
-		"click: ", xy_str(input$plot_click),
-		"brush: ", xy_range_str(input$plot_brush)
-	)
 })
 
-
+### showing coordinates in a table
+output$datatable <- renderTable({
+if (input$method_type != "click_for_mother_points")	{
+		return()
+	} else {
+		values$DT
+	}
+})
 
 
 
@@ -176,28 +191,11 @@ output$community_uploading_tool <- renderUI({
 	} else {
 		fileInput(inputId="loaded_file", label="Choose rData community File", multiple = FALSE,
 					accept = "", width = NULL,
-					buttonLabel = "Browse...", placeholder = "No file selected")	# c("text/csv", "text/comma-separated-values,text/plain", ".csv")
+					buttonLabel = "Browse...", placeholder = "No file selected")
 	}
 })
 
-# output$sim.com <- reactive({
-	# if (is.null(input$loaded_file)) {
-		# User has not uploaded a file yet
-		# return(NULL)
-	# } else {
-		# load(input$loaded_file$datapath)
-		# sim.com <- get(load(input$loaded_file$datapath))
-		# return(load(input$loaded_file$datapath))
-	# }
-# })
- 
-output$debug_text1 <- renderText(paste0("class(input$sim.com): ", class(input$sim.com)))
-output$debug_text2 <- renderText(paste0("class(input$loaded_file): ", class(input$loaded_file)))
-output$debug_text3 <- renderText(paste0("class(sim.com)", class(sim.com)))
-#output$debug_text4 <- renderText(paste0("class(output$sim.com) ", class(output$sim.com)))
 
- 
- 
 
 	## plot theme
 	### plot function

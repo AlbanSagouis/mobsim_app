@@ -18,7 +18,7 @@ navbarPage("Visualization of biodiversity pattern",
 
 		fluidPage(
 			fluidRow(
-				column(width=4,
+				column(width=3,
 					# Slider inputs
 					sliderInput("N", "Number of individuals",
 									min=10, max=5000, value=500, step=50, ticks=F),
@@ -33,7 +33,7 @@ navbarPage("Visualization of biodiversity pattern",
 					uiOutput("debug_text4")
 					
 				),
-				column(width=4,
+				column(width=3,
 					uiOutput("select_sad_type"),
 					uiOutput("CVslider"),
 
@@ -45,7 +45,7 @@ navbarPage("Visualization of biodiversity pattern",
 					uiOutput("community_uploading_tool")
 				),
 				
-				column(width=4,
+				column(width=3,
 					uiOutput("species_ID_input"),
 					plotOutput("on_plot_selection",
 						click = "plot_click",
@@ -53,10 +53,13 @@ navbarPage("Visualization of biodiversity pattern",
 					),
 					
 					uiOutput("rem_point_button"),
-					uiOutput("rem_all_points_button"),
+					uiOutput("rem_all_points_button")
 					
-					# tableOutput("table"),
-					uiOutput("info")
+					# uiOutput("info")
+				),
+				
+				column(width=3,
+					tableOutput("datatable")
 				)
 			)
 		),
