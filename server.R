@@ -16,10 +16,6 @@ library(ggplot2)
 # Define server logic for slider examples
 shinyServer(function(input, output, session) {
   
-  # if(keep){
-  #   ...
-  # }
-  
   # update range for species richness, an observed species has minimum one individual
 	observe({
 		updateSliderInput(session, "S", min=5, max=input$N, value=5, step=5)
@@ -62,6 +58,8 @@ output$text_spat_agg <- renderUI({
 })
 
 
+##		random_mother_points
+
 output$spatdist <- renderUI({
 	if (input$method_type != "random_mother_points")	{
 		return()
@@ -78,6 +76,9 @@ output$spatcoef <- renderUI({
 	}					
 })
 
+
+
+##		click_for_mother_points
 
 
 output$species_ID_input <- renderUI({
@@ -123,24 +124,12 @@ output$info <- renderUI({
 	if (input$method_type != "click_for_mother_points")	{
 		return()
 	} else {
-		verbatimTextOutput("info", placeholder=F)
+		TextOutput("info", placeholder=F)
 	}
 })
-
-
-output$community <- renderUI({
-	if (input$method_type != "uploading_community_data")	{
-		return()
-	} else {
-		fileInput(inputId="sim.com", label="Choose rData community File", multiple = FALSE,
-					accept = "", width = NULL,
-					buttonLabel = "Browse...", placeholder = "No file selected")	# c("text/csv", "text/comma-separated-values,text/plain", ".csv")
-	}
-})
-
 
  
-observeEvent(input$plot_click, { # The data.frame could be a matrix with already existing data: "no clustering" to allow users not to cluster some species.
+observeEvent(input$plot_click, {
 add_row = data.frame(x = input$plot_click$x,
 						 y = input$plot_click$y,
 						 species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")))
@@ -174,17 +163,80 @@ output$info <- renderText({
 		"brush: ", xy_range_str(input$plot_brush)
 	)
 })
+
+
+
+
+
+##		uploading_community_data
+
+output$community_uploading_tool <- renderUI({
+	if (input$method_type != "uploading_community_data")	{
+		return()
+	} else {
+		fileInput(inputId="loaded_file", label="Choose rData community File", multiple = FALSE,
+					accept = "", width = NULL,
+					buttonLabel = "Browse...", placeholder = "No file selected")	# c("text/csv", "text/comma-separated-values,text/plain", ".csv")
+	}
+})
+
+# output$sim.com <- reactive({
+	# if (is.null(input$loaded_file)) {
+		# User has not uploaded a file yet
+		# return(NULL)
+	# } else {
+		# load(input$loaded_file$datapath)
+		# sim.com <- get(load(input$loaded_file$datapath))
+		# return(load(input$loaded_file$datapath))
+	# }
+# })
+ 
+output$debug_text1 <- renderText(paste0("class(input$sim.com): ", class(input$sim.com)))
+output$debug_text2 <- renderText(paste0("class(input$loaded_file): ", class(input$loaded_file)))
+output$debug_text3 <- renderText(paste0("class(sim.com)", class(sim.com)))
+#output$debug_text4 <- renderText(paste0("class(output$sim.com) ", class(output$sim.com)))
+
+ 
+ 
+
+	## plot theme
+	### plot function
+ 	plot_layout <- function(sim.com) {
+		layout(matrix(c(1,2,3,
+							 4,5,6), byrow = T, nrow = 1, ncol = 6),
+				 heights = c(1,1), widths=c(1,1,1))
 		
-  ## plot theme
-   
+		set.seed(229376)
+		
+		sad1 <- community_to_sad(sim.com)
+		sac1 <- spec_sample_curve(sim.com)
+		divar1 <- divar(sim.com)
+		dist1 <- dist_decay(sim.com)
+		
+		plot(sad1, method = "octave")
+		plot(sad1, method = "rank")
+		
+		plot(sim.com)
+		
+		plot(sac1)
+		plot(divar1)
+		plot(dist1)
+	}
+
+	
+	
+	
+	
+	
   output$InteractivePlot <- renderPlot({
     input$Restart
     
     isolate({
+		
+		if(input$method_type != "uploading_community_data") {
       
 		set.seed(229376)
 		
-		if(input$method_type != "uploading_community_data") {
 		
 			spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spatagg), ",")))
 			spatcoef_num <- as.numeric(unlist(strsplit(trimws(input$spatcoef), ",")))
@@ -203,16 +255,8 @@ output$info <- renderText({
 																		ymother=tapply(values$DT$y, values$DT$species_ID, list))
 									)
 									
-			# if(input$method_type == "click_for_mother_points") {	# if the user does not set any point for some species: no clustering
-				# species_list <- paste("species", 1:input$S, sep="_")
-				# missing_species <- species_list[!species_list %in% values$DT$species_ID]
-				# if(length(missing_species) > 0) {
-					# xmother[missing_species] <- "no_clustering"
-					# ymother[missing_species] <- "no_clustering"
-				# }
-				# xmother[is.na(xmother)] <- "no clustering"
-				# ymother[is.na(ymother)] <- "no clustering"
-			# }
+
+
 			
 			sim.com <- switch(input$sad_type,
 							"lnorm"=sim_thomas_community(s_pool = input$S, n_sim = input$N, 
@@ -228,27 +272,23 @@ output$info <- renderText({
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								fix_s_sim = T)
 						)
+		} else {
+			sim.com <- get(load(input$loaded_file$datapath))
 		}
+
+		plot_layout(sim.com)
+		previous.sim.com <<- sim.com
 		
-      layout(matrix(c(1,2,3,
-                      4,5,6), byrow = T, nrow = 2, ncol = 3),
-             heights = c(1,1), widths=c(1,1,1))
-      
-      sad1 <- community_to_sad(sim.com)
-      sac1 <- spec_sample_curve(sim.com)
-      divar1 <- divar(sim.com)
-      dist1 <- dist_decay(sim.com)
-      
-      plot(sad1, method = "octave")
-      plot(sad1, method = "rank")
-      
-      plot(sim.com)
-      
-      plot(sac1)
-      plot(divar1)
-      plot(dist1)
-    })
-    
-  })
-  
+	})
+	})
+		
+	
+	output$PreviousInteractivePlot <- renderPlot({
+		if(!input$keep){
+			return()
+		} else {
+			plot_layout(previous.sim.com)
+		}
+	})
+	
 })
