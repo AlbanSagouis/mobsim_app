@@ -10,11 +10,13 @@
 library(shiny)
 library(shinyBS)
 library(mobsim)
+library(DT)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern",
-	tabPanel("Plot", 
+navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
+	tabPanel("Introduction", includeMarkdown("introduction.md")),
+	tabPanel("MOBsim", 
 
 		fluidPage(
 			fluidRow(
@@ -27,12 +29,10 @@ navbarPage("Visualization of biodiversity pattern",
 									min=5, max=500, value=5, step=5, ticks=F),
 					
 					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE),
-					uiOutput("debug_text1"),
-					uiOutput("debug_text2"),
-					uiOutput("debug_text3"),
-					uiOutput("debug_text4")
 					
+					checkboxInput("sample_setting_button", "Sample setting", value=FALSE)
 				),
+				
 				column(width=3,
 					uiOutput("select_sad_type"),
 					uiOutput("CVslider"),
@@ -51,15 +51,18 @@ navbarPage("Visualization of biodiversity pattern",
 						click = "plot_click",
 						brush = "plot_brush"
 					),
-					
-					uiOutput("rem_point_button"),
-					uiOutput("rem_all_points_button")
+					column(offset=1, width=5, uiOutput("rem_point_button")),
+					column(width=6, uiOutput("rem_all_points_button"))
 					
 					# uiOutput("info")
 				),
 				
 				column(width=3,
-					tableOutput("datatable")
+					div(style = 'height:50vh; overflow-y: scroll',
+						tableOutput("datatable")
+					),
+					verbatimTextOutput("simcomsummary", placeholder=FALSE),
+					tags$style(type = 'text/css', '#simcomsummary {font-size: 10px;}')	# font-family: calibri light; background-color: rgba(255,255,255,0.40); color: black; border-style: none;}')
 				)
 			)
 		),
@@ -76,7 +79,7 @@ navbarPage("Visualization of biodiversity pattern",
 			column(width=1)				
 		),
 		
-		fluidRow(
+		fluidRow(align="center",
 			# plotOutput("PreviousInteractivePlot", height="600px",width="750px"),
 			# plotOutput("InteractivePlot", height="600px",width="750px")
 			plotOutput("PreviousInteractivePlot", height="300px",width="1500px"),
@@ -84,6 +87,10 @@ navbarPage("Visualization of biodiversity pattern",
 		)
 	),
 	
-	tabPanel("Introduction", includeMarkdown("introduction.md"))
-	# another tabPanel "Saved simulation" with the previous sim?
+	tabPanel("Sampling",
+		column(width=6),
+		column(width=6,
+			plotOutput("sampling_plot", height="500px",width="500px")
+		)
+	)
 )

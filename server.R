@@ -95,7 +95,7 @@ output$on_plot_selection <- renderPlot({
 	} else {
 		if(input$method_type=="click_for_mother_points") {
 				color_vector <- rainbow(input$S)
-				par(mex=0.7, mar=c(3,3,1,1))
+				par(mex=0.6, mar=c(3,3,0,0), cex.axis=0.8)
 				plot(x=values$DT$x, y=values$DT$y, col=color_vector[values$DT$species_ID], xlim=c(0,1), ylim=c(0,1), xlab="", ylab="", las=1, asp=1, pch=20)
 				abline(h=c(0,1), v=c(0,1), lty=2)
 		}
@@ -116,15 +116,6 @@ output$rem_all_points_button <- renderUI({
 		return()
 	} else {
 		actionButton("rem_all_points", "Remove All Points")
-	}
-})
-
-
-output$info <- renderUI({
-	if (input$method_type != "click_for_mother_points")	{
-		return()
-	} else {
-		TextOutput("info", placeholder=F)
 	}
 })
 
@@ -181,10 +172,16 @@ if (input$method_type != "click_for_mother_points")	{
 	}
 })
 
+### showing community summary
+observe({
+	output$simcomsummary <- renderPrint({
+		input$Restart
+		summary(session$userData$sim.com, digits=2)
+	})
+})
 
 
 ##		uploading_community_data
-
 output$community_uploading_tool <- renderUI({
 	if (input$method_type != "uploading_community_data")	{
 		return()
@@ -208,13 +205,13 @@ output$community_uploading_tool <- renderUI({
 		
 		sad1 <- community_to_sad(sim.com)
 		sac1 <- spec_sample_curve(sim.com)
-		divar1 <- divar(sim.com)
+		divar1 <- divar(sim.com, exclude_zeros=F)
 		dist1 <- dist_decay(sim.com)
 		
 		plot(sad1, method = "octave")
 		plot(sad1, method = "rank")
 		
-		plot(sim.com)
+		plot(sim.com, main = "Community distribution")
 		
 		plot(sac1)
 		plot(divar1)
@@ -255,8 +252,8 @@ output$community_uploading_tool <- renderUI({
 									
 
 
-			
-			sim.com <- switch(input$sad_type,
+			# sim.com might rather be set as a reactive ({ }) that is then called sim.com(). is this more efficient ?
+			session$userData$sim.com <- switch(input$sad_type,
 							"lnorm"=sim_thomas_community(s_pool = input$S, n_sim = input$N, 
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sad_type, sad_coef=list(cv_abund=input$coef),
@@ -271,22 +268,41 @@ output$community_uploading_tool <- renderUI({
 								fix_s_sim = T)
 						)
 		} else {
-			sim.com <- get(load(input$loaded_file$datapath))
+			session$userData$sim.com <- get(load(input$loaded_file$datapath))
 		}
 
-		plot_layout(sim.com)
-		previous.sim.com <<- sim.com
+		plot_layout(session$userData$sim.com)
+		session$userData$previous.sim.com <- session$userData$sim.com
 		
 	})
 	})
 		
 	
+
+	
 	output$PreviousInteractivePlot <- renderPlot({
 		if(!input$keep){
 			return()
 		} else {
-			plot_layout(previous.sim.com)
+			plot_layout(session$userData$previous.sim.com)
 		}
 	})
+	
+	# observeEvent(input$keep, {	# adds as many previous plots as clicks. works in conjunction with renderPlot of outpu$PreviousInteractivePlot and in replacement of ui plotOutput(outpu$PreviousInteractivePlot).
+		# insertUI(
+			# selector = "#InteractivePlot",
+			# where = "beforeBegin",
+			# ui = plotOutput("PreviousInteractivePlot", height="300px",width="1500px")
+		# )
+	# })
+	
+	
+	# Sampling
+	output$sampling_plot <- renderPlot({
+		plot(session$userData$sim.com, main = "Community distribution")
+	})	
+	
+
+	
 	
 })
