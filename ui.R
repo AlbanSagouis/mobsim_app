@@ -28,9 +28,9 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 					sliderInput("S", "Species Richness",
 									min=5, max=500, value=5, step=5, ticks=F),
 					
-					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE),
+					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
 					
-					checkboxInput("sample_setting_button", "Sample setting", value=FALSE)
+					# checkboxInput("sample_setting_button", "Sample setting", value=FALSE)
 				),
 				
 				column(width=3,
@@ -68,15 +68,13 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 		),
 		
 		
-		fluidRow(
-			column(width=6, offset=5,
-				# Action button
-				actionButton(inputId="Restart",label="Restart Simulation"),
-				
-				# Check box
-				checkboxInput(input='keep', label='Keep this simulation', value=FALSE) 
-			),
-			column(width=1)				
+		fluidRow(align="center",
+			# Restart action button
+			actionButton(inputId="Restart",label="Restart Simulation"),
+			# Download sim.com action button
+			downloadButton("downloadData", "Download community object"),
+			# Check box
+			checkboxInput(input='keep', label='Keep this simulation', value=FALSE)			
 		),
 		
 		fluidRow(align="center",
@@ -84,13 +82,26 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			# plotOutput("InteractivePlot", height="600px",width="750px")
 			plotOutput("PreviousInteractivePlot", height="300px",width="1500px"),
 			plotOutput("InteractivePlot", height="300px",width="1500px")
+		),
+		
+		fluidRow(align="center",
+			downloadButton("downloadMobPlot", "Download plot")
 		)
 	),
 	
 	tabPanel("Sampling",
-		column(width=6),
 		column(width=6,
-			plotOutput("sampling_plot", height="500px",width="500px")
+			column(width=6, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
+			column(width=6, numericInput("area_of_quadrats", label="Quadrat area", value=0.005, min=0.00001, max=1, step=0.005)),
+			column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of repetitions", value=10, min=5, max=200, step=5)),
+			column(width=6, actionButton("sampling_simulation_button", label="Simulation")),
+			column(width=12,
+				verbatimTextOutput("samplingsummary", placeholder=FALSE),
+				plotOutput("sampling_hist", height="600px",width="500px")
+			)
+		),
+		column(width=6,
+			plotOutput("sampling_plot", height="600px",width="600px")
 		)
 	)
 )

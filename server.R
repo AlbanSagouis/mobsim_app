@@ -298,11 +298,61 @@ output$community_uploading_tool <- renderUI({
 	
 	
 	# Sampling
+	## Sampling parameters
+	
+	## Plot the community and sampling squares
 	output$sampling_plot <- renderPlot({
+		input$Restart
 		plot(session$userData$sim.com, main = "Community distribution")
+		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, plot=T, method = "random", avoid_overlap=T)
 	})	
 	
-
+	## Sampling summary
+	### % of species found
+	output$samplingsummary <- renderPrint({
+		input$sampling_simulation_button
+		set.seed(33)
+		session$userData$sap_test <- lapply(1:input$nrep_for_sampling_simulation, function(i) {
+			quadrats <- sample_quadrats(session$userData$sim.com, avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
+			return(list(
+				richness=sum(apply(quadrats$spec_dat, 2, sum)>0),
+				standardised_difference=as.numeric(apply(quadrats$spec_dat,2,sum)/sum(quadrats$spec_dat) - table(session$userData$sim.com$census$species)/sum(table(session$userData$sim.com$census$species)))
+			))
+			}
+		)
+		session$userData$richness <- unlist(sapply(session$userData$sap_test, function(x) x["richness"]))
+		summary(session$userData$richness)
+		# class(session$userData$sap_test)
+		#length(session$userData$richness)
+		#session$userData$sap_test
+	})
+	
+	### abundance assessment accuracy
+	output$sampling_hist <- renderPlot({
+		input$sampling_simulation_button
+		session$userData$standardised_difference <- sapply(session$userData$sap_test, function(x) x["standardised_difference"])
+		plot(density(unlist(session$userData$standardised_difference)), main="Abundance assessment\naccuracy", las=1)
+	})
+	
+	# Downloading data and plots
+	
+	output$downloadData <- downloadHandler(
+		filename =function() {paste("community", sep="")},
+		content = function(fname) {
+			sim.com <<- session$userData$sim.com
+			save("sim.com", file=fname)
+		}
+	)
+	
+	output$downloadMobPlot <- downloadHandler(
+		filename=function(fname) {"plotMOB.png"},
+		content=function(fname) {
+			png(filename=fname, width=1500, height=300)
+			print(plot_layout(session$userData$sim.com))
+			dev.off()
+		}
+	)
+			
 	
 	
 })
