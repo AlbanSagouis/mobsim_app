@@ -311,20 +311,25 @@ output$community_uploading_tool <- renderUI({
 	### % of species found
 	output$samplingsummary <- renderPrint({
 		input$sampling_simulation_button
-		set.seed(33)
-		session$userData$sap_test <- lapply(1:input$nrep_for_sampling_simulation, function(i) {
-			quadrats <- sample_quadrats(session$userData$sim.com, avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
-			return(list(
-				richness=sum(apply(quadrats$spec_dat, 2, sum)>0),
-				standardised_difference=as.numeric(apply(quadrats$spec_dat,2,sum)/sum(quadrats$spec_dat) - table(session$userData$sim.com$census$species)/sum(table(session$userData$sim.com$census$species)))
-			))
-			}
-		)
-		session$userData$richness <- unlist(sapply(session$userData$sap_test, function(x) x["richness"]))
-		summary(session$userData$richness)
-		# class(session$userData$sap_test)
-		#length(session$userData$richness)
-		#session$userData$sap_test
+		isolate({
+			set.seed(33)
+			withProgress(message = 'Simulating', value = 0, {
+				session$userData$sap_test <- lapply(1:input$nrep_for_sampling_simulation, function(i) {
+					quadrats <- sample_quadrats(session$userData$sim.com, avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
+					incProgress(1/input$nrep_for_sampling_simulation, detail = paste("Doing repetition", i))
+					return(list(
+						richness = sum(apply(quadrats$spec_dat, 2, sum)>0),
+						standardised_difference = as.numeric(apply(quadrats$spec_dat,2,sum)/sum(quadrats$spec_dat) - table(session$userData$sim.com$census$species)/sum(table(session$userData$sim.com$census$species)))
+					))
+					}
+				)
+			})
+			session$userData$richness <- unlist(sapply(session$userData$sap_test, function(x) x["richness"]))
+			summary(session$userData$richness)
+			# class(session$userData$sap_test)
+			#length(session$userData$richness)
+			#session$userData$sap_test
+		})
 	})
 	
 	### abundance assessment accuracy
