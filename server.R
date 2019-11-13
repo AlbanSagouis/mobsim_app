@@ -304,7 +304,7 @@ output$community_uploading_tool <- renderUI({
 	output$sampling_plot <- renderPlot({
 		input$Restart
 		plot(session$userData$sim.com, main = "Community distribution")
-		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, plot=T, method = "random", avoid_overlap=T)
+		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, plot=T, method = input$sampling_method, avoid_overlap=T)
 	})	
 	
 	## Sampling summary
@@ -313,7 +313,7 @@ output$community_uploading_tool <- renderUI({
 		input$sampling_simulation_button
 		isolate({
 			set.seed(33)
-			withProgress(message = 'Simulating', value = 0, {
+			withProgress(message = 'Simulating', value = 0, {	# style="old"
 				session$userData$sap_test <- lapply(1:input$nrep_for_sampling_simulation, function(i) {
 					quadrats <- sample_quadrats(session$userData$sim.com, avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
 					incProgress(1/input$nrep_for_sampling_simulation, detail = paste("Doing repetition", i))

@@ -91,10 +91,13 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 	
 	tabPanel("Sampling",
 		column(width=6,
-			column(width=6, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
-			column(width=6, numericInput("area_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005)),
+			column(width=4, selectInput("sampling_method", label="Sampling Method", choices=c("random","grid"), selected="random")), #,"transect"
+			column(width=4, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
+			column(width=4, numericInput("area_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005)),
+			
 			column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
 			column(width=6,  style = "margin-top: 25px;", actionButton("sampling_simulation_button", label="Simulation")),
+			
 			column(width=12,
 				verbatimTextOutput("samplingsummary", placeholder=FALSE),
 				plotOutput("sampling_hist", height="600px",width="500px")
