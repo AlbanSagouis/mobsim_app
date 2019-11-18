@@ -201,7 +201,7 @@ output$community_uploading_tool <- renderUI({
 							 4,5,6), byrow = T, nrow = 1, ncol = 6),
 				 heights = c(1,1), widths=c(1,1,1))
 		
-		set.seed(229376)
+		set.seed(229377)	# 229376
 		
 		sad1 <- community_to_sad(sim.com)
 		sac1 <- spec_sample_curve(sim.com)
@@ -230,7 +230,7 @@ output$community_uploading_tool <- renderUI({
 		
 		if(input$method_type != "uploading_community_data") {
       
-		set.seed(229376)
+		set.seed(229377)	# 229376
 		
 		
 			spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spatagg), ",")))
@@ -297,66 +297,153 @@ output$community_uploading_tool <- renderUI({
 	# })
 	
 	
-	# Sampling
-	## Sampling parameters
-	
-	## Plot the community and sampling squares
-	output$sampling_plot <- renderPlot({
-		input$Restart
-		plot(session$userData$sim.com, main = "Community distribution")
-		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, plot=T, method = input$sampling_method, avoid_overlap=T)
-	})	
-	
-	## Sampling summary
-	### % of species found
-	output$samplingsummary <- renderPrint({
-		input$sampling_simulation_button
-		isolate({
-			set.seed(33)
-			withProgress(message = 'Simulating', value = 0, {	# style="old"
-				session$userData$sap_test <- lapply(1:input$nrep_for_sampling_simulation, function(i) {
-					quadrats <- sample_quadrats(session$userData$sim.com, avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
-					incProgress(1/input$nrep_for_sampling_simulation, detail = paste("Doing repetition", i))
-					return(list(
-						richness = sum(apply(quadrats$spec_dat, 2, sum)>0),
-						standardised_difference = as.numeric(apply(quadrats$spec_dat,2,sum)/sum(quadrats$spec_dat) - table(session$userData$sim.com$census$species)/sum(table(session$userData$sim.com$census$species)))
-					))
-					}
-				)
-			})
-			session$userData$richness <- unlist(sapply(session$userData$sap_test, function(x) x["richness"]))
-			summary(session$userData$richness)
-			# class(session$userData$sap_test)
-			#length(session$userData$richness)
-			#session$userData$sap_test
-		})
-	})
-	
-	### abundance assessment accuracy
-	output$sampling_hist <- renderPlot({
-		input$sampling_simulation_button
-		session$userData$standardised_difference <- sapply(session$userData$sap_test, function(x) x["standardised_difference"])
-		plot(density(unlist(session$userData$standardised_difference)), main="Abundance assessment\naccuracy", las=1)
-	})
-	
 	# Downloading data and plots
-	
+	## downloading data
 	output$downloadData <- downloadHandler(
-		filename =function() {paste("community", sep="")},
-		content = function(fname) {
-			sim.com <<- session$userData$sim.com
+		filename = function() {paste("community", sep="")},
+		content  = function(fname) {
+			sim.com <- session$userData$sim.com
 			save("sim.com", file=fname)
 		}
 	)
 	
+	## downloading plot
 	output$downloadMobPlot <- downloadHandler(
-		filename=function(fname) {"plotMOB.png"},
-		content=function(fname) {
-			png(filename=fname, width=1500, height=300)
-			print(plot_layout(session$userData$sim.com))
-			dev.off()
-		}
+	
+		filename = function() {paste("plotMOB", input$plot_saving_format, sep=".")},
+		content  = switch(input$plot_saving_format,
+			"png" = function(fname) {
+				png(filename=fname, width=15, height=3, units="in", res=300)
+				print(plot_layout(session$userData$sim.com))
+				dev.off()
+			},
+			"tiff" = function(fname) {
+				tiff(filename=fname, width=15, height=3, units="in", res=300)	# input$plot_saving_resolution
+				print(plot_layout(session$userData$sim.com))
+				dev.off()
+			},
+			"pdf" = function(fname) {
+				pdf(filename=fname, width=input$plot_saving_width, height=input$plot_saving_height)
+				print(plot_layout(session$userData$sim.com))
+				dev.off()
+			},
+			"svg" = function(fname) {
+				svg(filename=fname, width=15, height=3)
+				print(plot_layout(session$userData$sim.com))
+				dev.off()
+			}
+		)
+		# content=function(fname) {
+			# png(filename=fname, width=1500, height=300)
+			# print(plot_layout(session$userData$sim.com))
+			# dev.off()
+		# }
 	)
+
+	
+	# Sampling
+	## Community summary
+	output$community_summary_table <- renderTable(data.frame(Community = "",
+						n_species = length(levels(session$userData$sim.com$census$species)),
+						n_individuals = nrow(session$userData$sim.com$census)))
+	## Sampling parameters
+	
+	## Plot the community and sampling squares
+	
+	sampling_quadrats <- reactive({
+		input$new_sampling_button
+		
+		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F)
+		})
+	
+	output$sampling_plot <- renderPlot({
+		input$Restart
+		input$new_sampling_button	
+		isolate({
+			plot(session$userData$sim.com, main = "Community distribution")
+			quadrats_coordinates <- sampling_quadrats()$xy_dat
+			graphics::rect(quadrats_coordinates$x, quadrats_coordinates$y, quadrats_coordinates$x + sqrt(input$area_of_quadrats), quadrats_coordinates$y + 
+					sqrt(input$area_of_quadrats), lwd = 2, col = grDevices::adjustcolor("white", 
+					alpha.f = 0.6))
+		})
+	})	
+	
+	
+	## Sampling summary
+	### gamma scale
+	output$sampling_gamma_table <- renderTable({
+		input$Restart
+		input$new_sampling_button
+		isolate({
+			abund <- apply(sampling_quadrats()$spec_dat, 2, sum)
+			abund <- abund[abund > 0]
+			relabund <- abund/sum(abund)
+			shannon <- - sum(relabund * log(relabund))
+			simpson <- 1- sum(relabund^2)
+			data.frame(
+							Gamma_scale = "",
+							n_species= sum(abund >0),
+							shannon = round(shannon, 3),
+							ens_shannon = round(exp(shannon), 3),
+							simpson = round(simpson, 3),
+							ens_simpson = round(1/(1 - simpson), 3)
+			)
+		})
+	})
+							
+
+	### alpha scale
+	output$sampling_alpha_table <- renderDataTable({
+		input$Restart
+		input$new_sampling_button
+		isolate({
+			quadrats_coordinates <- sampling_quadrats()$xy_dat
+			DT::datatable(
+				t(round(sapply(1:nrow(quadrats_coordinates), function(i) div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)), 3)),
+			options=list(searching = FALSE, info = FALSE, sort = FALSE))
+		})
+	})
+	
+	observeEvent(input$new_sampling_button, {	# adds as many previous plots as clicks. works in conjunction with renderPlot of outpu$PreviousInteractivePlot and in replacement of ui plotOutput(outpu$PreviousInteractivePlot).
+		insertUI(
+			selector = "#sampling_alpha_table",
+			where = "afterEnd",
+			ui = dataTableOutput("sampling_gamma_table")
+		)
+	})
+			
+	### % of species found
+	# output$samplingsimulationsummary <- renderPrint({
+		# input$sampling_simulation_button
+		# isolate({
+			# set.seed(33)
+			# withProgress(message = 'Simulating', value = 0, {	# style="old"
+				# session$userData$sap_test <- lapply(1:input$nrep_for_sampling_simulation, function(i) {
+					# quadrats <- sample_quadrats(session$userData$sim.com, avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
+					# incProgress(1/input$nrep_for_sampling_simulation, detail = paste("Doing repetition", i))
+					# return(list(
+						# richness = sum(apply(quadrats$spec_dat, 2, sum)>0),
+						# standardised_difference = as.numeric(apply(quadrats$spec_dat,2,sum)/sum(quadrats$spec_dat) - table(session$userData$sim.com$census$species)/sum(table(session$userData$sim.com$census$species)))
+					# ))
+					# }
+				# )
+			# })
+			# session$userData$richness <- unlist(sapply(session$userData$sap_test, function(x) x["richness"]))
+			# summary(session$userData$richness)
+		# })
+	# })
+	
+	
+			
+	
+	
+	### abundance assessment accuracy
+	# output$sampling_hist <- renderPlot({
+		# input$sampling_simulation_button
+		# session$userData$standardised_difference <- sapply(session$userData$sap_test, function(x) x["standardised_difference"])
+		# plot(density(unlist(session$userData$standardised_difference)), main="Abundance assessment\naccuracy", las=1)
+	# })
+	
 			
 	
 	

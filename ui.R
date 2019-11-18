@@ -74,7 +74,7 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			# Download sim.com action button
 			downloadButton("downloadData", "Download community object"),
 			# Check box
-			checkboxInput(input='keep', label='Keep this simulation', value=FALSE)			
+			checkboxInput(input='keep', label='Keep this simulation plot', value=FALSE)			
 		),
 		
 		fluidRow(align="center",
@@ -85,7 +85,12 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 		),
 		
 		fluidRow(align="center",
-			downloadButton("downloadMobPlot", "Download plot")
+			# column(width=4, numericInput("plot_saving_width", label="Width in inches", value=15)),
+			# column(width=4, numericInput("plot_saving_height", label="Height in inches", value=3)),
+			# column(width=4, numericInput("plot_saving_reolution", label="Resolution", value=72)),
+			
+			column(width=6, selectInput("plot_saving_format", label="Saving format", choices=c("tiff","png"), selected="png")),
+			column(width=6, downloadButton("downloadMobPlot", "Download plot"))
 		)
 	),
 	
@@ -95,15 +100,20 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			column(width=4, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
 			column(width=4, numericInput("area_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005)),
 			
-			column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
-			column(width=6,  style = "margin-top: 25px;", actionButton("sampling_simulation_button", label="Simulation")),
+			# column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
+			# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
+			column(width=6, actionButton("new_sampling_button", label="New sampling")),	#, style = "margin-top: 25px;"
 			
-			column(width=12,
-				verbatimTextOutput("samplingsummary", placeholder=FALSE),
-				plotOutput("sampling_hist", height="600px",width="500px")
+			column(width=12, 
+				# verbatimTextOutput("samplingsimulationsummary", placeholder=FALSE),
+				# plotOutput("sampling_hist", height="600px",width="500px")
+				tableOutput("sampling_gamma_table"),
+				dataTableOutput("sampling_alpha_table")
 			)
 		),
 		column(width=6,
+			# here should be written the amount of species and individuals in the community
+			tableOutput("community_summary_table"),
 			plotOutput("sampling_plot", height="600px",width="600px")
 		)
 	)
