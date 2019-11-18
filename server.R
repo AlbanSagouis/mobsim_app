@@ -72,7 +72,7 @@ output$spatcoef <- renderUI({
 	if (input$method_type != "random_mother_points")	{
 		return()
 	} else {
-		textInput(inputId="spatcoef",label="Integer values separated by commas", value="1")
+		textInput(inputId="spatcoef",label="Integer values separated by commas", value="0")
 	}					
 })
 
@@ -400,7 +400,7 @@ output$community_uploading_tool <- renderUI({
 			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			DT::datatable(
 				t(round(sapply(1:nrow(quadrats_coordinates), function(i) div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)), 3)),
-			options=list(searching = FALSE, info = FALSE, sort = FALSE))
+			options=list(searching = FALSE, info = TRUE, sort = TRUE))
 		})
 	})
 	
@@ -408,9 +408,43 @@ output$community_uploading_tool <- renderUI({
 		insertUI(
 			selector = "#sampling_alpha_table",
 			where = "afterEnd",
-			ui = dataTableOutput("sampling_gamma_table")
+			ui = tableOutput("sampling_gamma_table")
 		)
 	})
+	
+	## Sampling efficiency plot
+	ranges <- reactiveValues(x = NULL, y = NULL)	# used to zoom in the plot
+	
+	output$rarefaction_curves <- renderPlot({	# to do: increase lwd of the line corresponding to a given site when mouse hovering over the site and vice versa.
+		input$Restart
+		input$new_sampling_button
+		input$rarefaction_curves_dblclick	# zooming-in
+		isolate({
+			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
+			apply(sampling_quadrats()$spec_dat, 1, function(site) {
+				lines(rare_curve(site), col="green", lwd=2)
+			})
+		})
+	})
+	
+	### Zooming inside the rarefaction curve plot
+		# brush on the desired area and double-click
+		# When a double-click happens, check if there's a brush on the plot.
+		# If so, zoom to the brush bounds; if not, reset the zoom.
+	observeEvent(input$rarefaction_curves_dblclick, {
+		brush <- input$rarefaction_curves_brush
+		if (!is.null(brush)) {
+			ranges$x <- c(brush$xmin, brush$xmax)
+			ranges$y <- c(brush$ymin, brush$ymax)
+		} else {
+			ranges$x <- NULL
+			ranges$y <- NULL
+		}
+	})
+
+	
+	
+	
 			
 	### % of species found
 	# output$samplingsimulationsummary <- renderPrint({

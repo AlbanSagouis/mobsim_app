@@ -23,10 +23,10 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				column(width=3,
 					# Slider inputs
 					sliderInput("N", "Number of individuals",
-									min=10, max=5000, value=500, step=50, ticks=F),
+									min=10, max=5000, value=2500, step=50, ticks=F),
 					
 					sliderInput("S", "Species Richness",
-									min=5, max=500, value=5, step=5, ticks=F),
+									min=5, max=500, value=100, step=5, ticks=F),
 					
 					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
 					
@@ -104,15 +104,23 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
 			column(width=6, actionButton("new_sampling_button", label="New sampling")),	#, style = "margin-top: 25px;"
 			
-			column(width=12, 
+			fluidRow(
+			# Simulation
 				# verbatimTextOutput("samplingsimulationsummary", placeholder=FALSE),
 				# plotOutput("sampling_hist", height="600px",width="500px")
+			# Tables
 				tableOutput("sampling_gamma_table"),
-				dataTableOutput("sampling_alpha_table")
+				# dataTableOutput("sampling_alpha_table")
+			# Plots
+				plotOutput("rarefaction_curves",
+					dblclick = "rarefaction_curves_dblclick",
+					brush = brushOpts(
+						id = "rarefaction_curves_brush",
+						resetOnNew = TRUE)
+				)
 			)
 		),
 		column(width=6,
-			# here should be written the amount of species and individuals in the community
 			tableOutput("community_summary_table"),
 			plotOutput("sampling_plot", height="600px",width="600px")
 		)
