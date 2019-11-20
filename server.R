@@ -353,7 +353,6 @@ output$community_uploading_tool <- renderUI({
 	## Sampling parameters
 	
 	## Plot the community and sampling squares
-	
 	sampling_quadrats <- reactive({
 		set.seed(33)
 		input$new_sampling_button
@@ -371,13 +370,16 @@ output$community_uploading_tool <- renderUI({
 			graphics::rect(quadrats_coordinates$x, quadrats_coordinates$y, quadrats_coordinates$x + sqrt(input$area_of_quadrats), quadrats_coordinates$y + 
 					sqrt(input$area_of_quadrats), lwd = 2, col = grDevices::adjustcolor("white", 
 					alpha.f = 0.6))
+			points(input$sampling_plot_click$x, input$sampling_plot_click$y, pch="x", col="red")
+			text(sampling_quadrats()$xy_dat$x, sampling_quadrats()$xy_dat$y, pch=as.character(1:nrow(sampling_quadrats()$xy_dat)))
 		})
 		if(!is.null(input$rarefaction_curves_plot_hover)) {	# highlight
-			rect(xleft = quadrats_coordinates$x[rarefaction_curves_hover_info()],
-					ybottom = quadrats_coordinates$y[rarefaction_curves_hover_info()],
-					xright = quadrats_coordinates$x[rarefaction_curves_hover_info()] + sqrt(input$area_of_quadrats),
-					ytop = quadrats_coordinates$y[rarefaction_curves_hover_info()] + sqrt(input$area_of_quadrats),
+			rect(xleft = quadrats_coordinates[rarefaction_curves_hover_info(), "x"],
+					ybottom = quadrats_coordinates[rarefaction_curves_hover_info(), "y"],
+					xright = quadrats_coordinates[rarefaction_curves_hover_info(), "x"] + sqrt(input$area_of_quadrats),
+					ytop = quadrats_coordinates[rarefaction_curves_hover_info(), "y"] + sqrt(input$area_of_quadrats),
 					lwd=2, col = grDevices::adjustcolor("forestgreen", alpha.f = 0.5))
+
 		}
 	})
 	
@@ -446,6 +448,10 @@ output$community_uploading_tool <- renderUI({
 			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
 			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(rarefaction_curves_list(), lines, lwd=2, col="green")	# Drawing all alpha scale curves
+			for (site in names(rarefaction_curves_list())) {
+				temp=rarefaction_curves_list()[[site]]
+				text(gsub(site, pattern="site", replacement=""), x=10, y=temp[10])
+			}			
 		})
 		
 		if(!is.null(input$sampling_plot_click)) {	# highlight
@@ -505,8 +511,8 @@ output$community_uploading_tool <- renderUI({
 
 			hover <- input$rarefaction_curves_plot_hover	# xy coordinates of the cursor
 			distance <- sqrt((hover$x-tabtemp$x)^2+(hover$y-tabtemp$y)^2)
-			if(min(distance) < 3)
-				tabtemp$site[which.min(distance)]
+			# if(min(distance) < 3)
+				as.character(tabtemp$site[which.min(distance)])
 		}
 	})
 	
