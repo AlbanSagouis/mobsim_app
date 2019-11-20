@@ -413,26 +413,41 @@ output$community_uploading_tool <- renderUI({
 	})
 	
 	## Sampling efficiency plot
-	ranges <- reactiveValues(x = NULL, y = NULL)	# used to zoom in the plot
+	ranges <- reactiveValues(x = NULL, y = NULL)		# used to zoom in the plot
 	
-	output$rarefaction_curves <- renderPlot({	# to do: increase lwd of the line corresponding to a given site when mouse hovering over the site and vice versa.
+	rarefaction_curves_list <- reactive({		# computing the rarefaction curves
+		apply(sampling_quadrats()$spec_dat, 1, function(site) {
+			rare_curve(site)
+		})
+	})
+		
+	
+	output$rarefaction_curves_plot <- renderPlot({		# to do: increase lwd of the line corresponding to a given site when mouse clicking over the site and vice versa.
 		input$Restart
 		input$new_sampling_button
-		input$rarefaction_curves_dblclick	# zooming-in
+		input$rarefaction_curves_plot_dblclick	# zooming-in
+		# input$rarefaction_curves_plot_hover	# visualising individual sites
+		input$sampling_plot_click_info			# 
+		
 		isolate({
 			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
-			apply(sampling_quadrats()$spec_dat, 1, function(site) {
-				lines(rare_curve(site), col="green", lwd=2)
-			})
+			lapply(rarefaction_curves_list(), lines, lwd=2, col="green")
+			# if(!is.null(input$rarefaction_curves_plot_hover)) {
+				# lines(rarefaction_curves_list()[[hover_info()]], lwd=4, col="forestgreen")
+			# }
+			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=4, col="blue")	# Drawing gamma scale curve
 		})
+			if(!is.null(input$sampling_plot_click)) {
+				lines(rarefaction_curves_list()[[sampling_plot_click_info()]], lwd=4, col="forestgreen")
+			}
 	})
 	
 	### Zooming inside the rarefaction curve plot
 		# brush on the desired area and double-click
 		# When a double-click happens, check if there's a brush on the plot.
 		# If so, zoom to the brush bounds; if not, reset the zoom.
-	observeEvent(input$rarefaction_curves_dblclick, {
-		brush <- input$rarefaction_curves_brush
+	observeEvent(input$rarefaction_curves_plot_dblclick, {
+		brush <- input$rarefaction_curves_plot_brush
 		if (!is.null(brush)) {
 			ranges$x <- c(brush$xmin, brush$xmax)
 			ranges$y <- c(brush$ymin, brush$ymax)
@@ -441,8 +456,44 @@ output$community_uploading_tool <- renderUI({
 			ranges$y <- NULL
 		}
 	})
-
 	
+	### Highlighting sampling sites rarefaction curve and table line and quadrat
+	#### sampling plot
+		# what if there is overlap?
+		# what if the quadrats are so small, they are unclickable?
+
+		sampling_plot_click_info <- reactive({
+			if(!is.null(input$sampling_plot_click)) {
+				x0 <- sampling_quadrats()$xy_dat$x
+				y0 <- sampling_quadrats()$xy_dat$y
+				size <- sqrt(input$area_of_quadrats)
+				
+				click <- input$sampling_plot_click
+				
+				which_site <- logical(input$number_of_quadrats)
+				for(site in 1:input$number_of_quadrats) {
+					which_site[site] <- (click$x >= x0[site] & click$x < (x0[site] + size) & click$y >= y0[site] & click$y < (y0[site] + size))
+				}
+				rownames(sampling_quadrats()$xy_dat)[which_site]
+			}
+		})
+	
+	
+	
+	#### rarefaction curve plot
+	# hover_info <- reactive({
+		# if(!is.null(input$rarefaction_curves_plot_hover)) {
+			# vectemp <- unlist(rarefaction_curves_list())
+			# tabtemp <- data.frame(site = sapply(strsplit(names(vectemp), split="\\."), head, 1),
+							# x = as.numeric(sapply(strsplit(names(vectemp), split="\\."), tail, 1)),
+							# y = vectemp)
+
+			# hover <- input$rarefaction_curves_plot_hover
+			# distance <- sqrt((hover$x-tabtemp$x)^2+(hover$y-tabtemp$y)^2)
+			# if(min(distance) < 3)
+				# tabtemp$site[which.min(distance)]
+		# }
+	# })
 	
 	
 			

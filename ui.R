@@ -112,17 +112,19 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				tableOutput("sampling_gamma_table"),
 				# dataTableOutput("sampling_alpha_table")
 			# Plots
-				plotOutput("rarefaction_curves",
-					dblclick = "rarefaction_curves_dblclick",
+				plotOutput("rarefaction_curves_plot",
+					# click = "rarefaction_curves_plot_click",
+					dblclick = "rarefaction_curves_plot_dblclick",
 					brush = brushOpts(
-						id = "rarefaction_curves_brush",
-						resetOnNew = TRUE)
+						id = "rarefaction_curves_plot_brush",
+						resetOnNew = TRUE),
+					hover = hoverOpts(id ="rarefaction_curves_plot_hover")
 				)
 			)
 		),
 		column(width=6,
 			tableOutput("community_summary_table"),
-			plotOutput("sampling_plot", height="600px",width="600px")
+			plotOutput("sampling_plot", height="600px",width="600px", click="sampling_plot_click")
 		)
 	)
 )
