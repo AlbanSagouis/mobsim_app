@@ -74,7 +74,7 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			# Download sim.com action button
 			downloadButton("downloadData", "Download community object"),
 			# Check box
-			checkboxInput(input='keep', label='Keep this simulation plot', value=FALSE)			
+			checkboxInput(input='keepInteractivePlot', label='Keep this simulation plot', value=FALSE)			
 		),
 		
 		fluidRow(align="center",
@@ -102,7 +102,10 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			
 			# column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
 			# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
-			column(width=6, actionButton("new_sampling_button", label="New sampling")),	#, style = "margin-top: 25px;"
+			column(width=6, 
+				actionButton("new_sampling_button", label="New sampling"),
+				actionButton("keepRarefactionCurvesPlot", label='Keep this sampling design')
+			),	#, style = "margin-top: 25px;"
 			
 			fluidRow(
 			# Simulation

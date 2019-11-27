@@ -1,0 +1,10 @@
+name: mobsim_app
+title:
+username:
+account: sagouis
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1531684
+bundleId: 2621387
+url: https://sagouis.shinyapps.io/mobsim_app/
+when: 1574843626.43518
