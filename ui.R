@@ -120,12 +120,12 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			# Plots
 			column(width=4,
 				plotOutput("rarefaction_curves_plot",
-					# click = "rarefaction_curves_plot_click",
+					click = "rarefaction_curves_plot_click",
 					dblclick = "rarefaction_curves_plot_dblclick",
 					brush = brushOpts(
 						id = "rarefaction_curves_plot_brush",
 						resetOnNew = TRUE),
-					hover = hoverOpts(id ="rarefaction_curves_plot_hover")
+					# hover = hoverOpts(id ="rarefaction_curves_plot_hover")
 				)
 			),
 			column(width=4,

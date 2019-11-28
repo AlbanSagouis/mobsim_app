@@ -364,13 +364,13 @@ shinyServer(function(input, output, session) {
 		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F)
 	})
 	
-	previous_sampling_quadrats <- reactive({
-		input$keepRarefactionCurvesPlot
+	# previous_sampling_quadrats <- reactive({
+		# input$keepRarefactionCurvesPlot
 		
-		isolate({
-			sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F)
-		})
-	})
+		# isolate({
+			# sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F)
+		# })
+	# })
 	
 	# eventReactive("new_sampling_button", {
 		# session$userData$sampled_quadrats <- sampling_quadrats()
@@ -382,9 +382,9 @@ shinyServer(function(input, output, session) {
 		input$new_sampling_button
 		
 		isolate({
-			plot(session$userData$sim.com, main = "Community distribution")
 			session$userData$sampled_quadrats <- sampling_quadrats()
 			quadrats_coordinates <- session$userData$sampled_quadrats$xy_dat
+			plot(session$userData$sim.com, main = "Community distribution")
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
 								quadrats_coordinates$x + sqrt(input$area_of_quadrats),
@@ -394,11 +394,11 @@ shinyServer(function(input, output, session) {
 			# text(session$userData$sampled_quadrats$xy_dat$x, session$userData$sampled_quadrats$xy_dat$y, pch=as.character(1:nrow(session$userData$sampled_quadrats$xy_dat)))	# debugging help
 		})
 		
-		if(!is.null(input$rarefaction_curves_plot_hover)) {	# highlight
-			graphics::rect(xleft = quadrats_coordinates[rarefaction_curves_hover_info(), "x"],
-					ybottom = quadrats_coordinates[rarefaction_curves_hover_info(), "y"],
-					xright = quadrats_coordinates[rarefaction_curves_hover_info(), "x"] + sqrt(input$area_of_quadrats),
-					ytop = quadrats_coordinates[rarefaction_curves_hover_info(), "y"] + sqrt(input$area_of_quadrats),
+		if(!is.null(input$rarefaction_curves_plot_click)) {	# highlight
+			graphics::rect(xleft = quadrats_coordinates[rarefaction_curves_click_info(), "x"],
+					ybottom = quadrats_coordinates[rarefaction_curves_click_info(), "y"],
+					xright = quadrats_coordinates[rarefaction_curves_click_info(), "x"] + sqrt(input$area_of_quadrats),
+					ytop = quadrats_coordinates[rarefaction_curves_click_info(), "y"] + sqrt(input$area_of_quadrats),
 					lwd=2, col = grDevices::adjustcolor("forestgreen", alpha.f = 0.5))
 					
 		}
@@ -409,25 +409,25 @@ shinyServer(function(input, output, session) {
 		input$keepRarefactionCurvesPlot
 		
 		isolate({
+			session$userData$previous_sampled_quadrats <- sampling_quadrats()
 			plot(session$userData$sim.com, main = "Community distribution")
-			quadrats_coordinates <- previous_sampling_quadrats()$xy_dat
+			quadrats_coordinates <- session$userData$previous_sampled_quadrats$xy_dat
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
 								quadrats_coordinates$x + sqrt(input$area_of_quadrats),
 								quadrats_coordinates$y + sqrt(input$area_of_quadrats),
 								lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
 			# points(input$sampling_plot_click$x, input$sampling_plot_click$y, pch="x", col="red")	# debugging help
-			# text(previous_sampling_quadrats()$xy_dat$x, previous_sampling_quadrats()$xy_dat$y, pch=as.character(1:nrow(previous_sampling_quadrats()$xy_dat)))	# debugging help
+			# text(session$userData$previous_sampled_quadrats$xy_dat$x, session$userData$previous_sampled_quadrats$xy_dat$y, pch=as.character(1:nrow(session$userData$previous_sampled_quadrats$xy_dat)))	# debugging help
 		})
 		
-		if(!is.null(input$rarefaction_curves_plot_hover)) {	# highlight
-			graphics::rect(xleft = quadrats_coordinates[rarefaction_curves_hover_info(), "x"],
-					ybottom = quadrats_coordinates[rarefaction_curves_hover_info(), "y"],
-					xright = quadrats_coordinates[rarefaction_curves_hover_info(), "x"] + sqrt(input$area_of_quadrats),
-					ytop = quadrats_coordinates[rarefaction_curves_hover_info(), "y"] + sqrt(input$area_of_quadrats),
-					lwd=2, col = grDevices::adjustcolor("forestgreen", alpha.f = 0.5))
-					
-		}
+		# if(!is.null(input$rarefaction_curves_plot_hover)) {	# highlight
+			# graphics::rect(xleft = quadrats_coordinates[rarefaction_curves_hover_info(), "x"],
+					# ybottom = quadrats_coordinates[rarefaction_curves_hover_info(), "y"],
+					# xright = quadrats_coordinates[rarefaction_curves_hover_info(), "x"] + sqrt(input$area_of_quadrats),
+					# ytop = quadrats_coordinates[rarefaction_curves_hover_info(), "y"] + sqrt(input$area_of_quadrats),
+					# lwd=2, col = grDevices::adjustcolor("forestgreen", alpha.f = 0.5))				
+		# }
 	})
 	
 	
@@ -457,7 +457,7 @@ shinyServer(function(input, output, session) {
 		input$Restart
 		input$keepRarefactionCurvesPlot
 		isolate({
-			abund <- apply(previous_sampling_quadrats()$spec_dat, 2, sum)
+			abund <- apply(session$userData$previous_sampled_quadrats$spec_dat, 2, sum)
 			abund <- abund[abund > 0]
 			relabund <- abund/sum(abund)
 			shannon <- - sum(relabund * log(relabund))
@@ -503,7 +503,7 @@ shinyServer(function(input, output, session) {
 		input$Restart
 		input$keepRarefactionCurvesPlot
 		isolate({
-			quadrats_coordinates <- previous_sampling_quadrats()$xy_dat
+			quadrats_coordinates <- session$userData$previous_sampled_quadrats$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
 				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)
 			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
@@ -529,7 +529,7 @@ shinyServer(function(input, output, session) {
 		input$Restart
 		input$new_sampling_button
 		input$rarefaction_curves_plot_dblclick	# zooming in and out
-		# input$rarefaction_curves_plot_hover	# highlighting individual site
+		# input$rarefaction_curves_plot_click	# highlighting individual site
 		input$sampling_plot_click_info			# highlighting individual site
 		
 		isolate({
@@ -546,7 +546,7 @@ shinyServer(function(input, output, session) {
 			lines(rarefaction_curves_list()[[sampling_plot_click_info()]], lwd=4, col="forestgreen")
 		}
 		
-		# if(!is.null(input$rarefaction_curves_plot_hover)) {	# highlight
+		# if(!is.null(input$rarefaction_curves_plot_click)) {	# highlight
 			# lines(rarefaction_curves_list()[[rarefaction_curves_hover_info()]], lwd=4, col="forestgreen")
 		# }
 	})
@@ -560,7 +560,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
-			lines(rare_curve(apply(previous_sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+			lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(previous_rarefaction_curves_list(), lines, lwd=2, col="green")	# Drawing all alpha scale curves
 			# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
 				# temp=previous_rarefaction_curves_list()[[site]]
@@ -600,8 +600,8 @@ shinyServer(function(input, output, session) {
 
 	sampling_plot_click_info <- reactive({	# gives the selected site name
 		if(!is.null(input$sampling_plot_click)) {
-			x0 <- sampling_quadrats()$xy_dat$x
-			y0 <- sampling_quadrats()$xy_dat$y
+			x0 <- session$userData$sampled_quadrats$xy_dat$x
+			y0 <- session$userData$sampled_quadrats$xy_dat$y
 			size <- sqrt(input$area_of_quadrats)
 			
 			click <- input$sampling_plot_click
@@ -610,38 +610,52 @@ shinyServer(function(input, output, session) {
 			for(site in 1:input$number_of_quadrats) {
 				which_site[site] <- (click$x >= x0[site] & click$x < (x0[site] + size) & click$y >= y0[site] & click$y < (y0[site] + size))
 			}
-			rownames(sampling_quadrats()$xy_dat)[which_site]
+			rownames(session$userData$sampled_quadrats$xy_dat)[which_site]
 		}
 	})
 	
 	
 	
 	#### rarefaction curve plot
-	rarefaction_curves_hover_info <- reactive({	# gives the selected site name as.character (a site number would be more efficient)
-		if(!is.null(input$rarefaction_curves_plot_hover)) {
+	# rarefaction_curves_hover_info <- reactive({	# gives the selected site name as.character (a site number would be more efficient)
+		# if(!is.null(input$rarefaction_curves_plot_hover)) {
+			# vectemp <- unlist(rarefaction_curves_list())
+			# tabtemp <- data.frame(site = sapply(strsplit(names(vectemp), split="\\."), head, 1),
+							# x = as.numeric(sapply(strsplit(names(vectemp), split="\\."), tail, 1)),
+							# y = vectemp)
+
+			# hover <- input$rarefaction_curves_plot_hover	# xy coordinates of the cursor
+			# distance <- sqrt((hover$x-tabtemp$x)^2+(hover$y-tabtemp$y)^2)
+			#if(min(distance) < 3)
+				# as.character(tabtemp$site[which.min(distance)])
+		# }
+	# })
+	rarefaction_curves_click_info <- reactive({	# gives the selected site name as.character (a site number would be more efficient)
+		if(!is.null(input$rarefaction_curves_plot_click)) {
 			vectemp <- unlist(rarefaction_curves_list())
 			tabtemp <- data.frame(site = sapply(strsplit(names(vectemp), split="\\."), head, 1),
 							x = as.numeric(sapply(strsplit(names(vectemp), split="\\."), tail, 1)),
 							y = vectemp)
 
-			hover <- input$rarefaction_curves_plot_hover	# xy coordinates of the cursor
-			distance <- sqrt((hover$x-tabtemp$x)^2+(hover$y-tabtemp$y)^2)
+			click <- input$rarefaction_curves_plot_click	# xy coordinates of the cursor
+			distance <- sqrt((click$x-tabtemp$x)^2+(click$y-tabtemp$y)^2)
 			##if(min(distance) < 3)
 				as.character(tabtemp$site[which.min(distance)])
 		}
 	})
 	
+	
 	observeEvent(input$keepRarefactionCurvesPlot, autoDestroy = FALSE, {	# adds as many previous plots as clicks. works in conjunction with renderPlot of outpu$PreviousInteractivePlot and in replacement of ui plotOutput(outpu$PreviousInteractivePlot).
-		# output$quicktesttext <- renderTable(data.frame(length=length(previous_sampling_quadrats()),
-				# class=class(previous_sampling_quadrats()),
-				# isnull=is.null(previous_sampling_quadrats())))
+		# output$quicktesttext <- renderTable(data.frame(length=length(session$userData$previous_sampled_quadrats),
+				# class=class(session$userData$previous_sampled_quadrats),
+				# isnull=is.null(session$userData$previous_sampled_quadrats)))
 		output$quicktesttext <- renderTable(data.frame(length=length(session$userData$sampled_quadrats$spec_dat),
 				class=class(session$userData$sampled_quadrats$spec_dat),
 				isnull=is.null(session$userData$sampled_quadrats$spec_dat)))
 				
 		previous_rarefaction_curves_list <- reactive({
 			isolate({
-				apply(previous_sampling_quadrats()$spec_dat, 1, function(site) {
+				apply(session$userData$previous_sampled_quadrats$spec_dat, 1, function(site) {
 					rare_curve(site)
 				})
 			})
@@ -654,7 +668,7 @@ shinyServer(function(input, output, session) {
 			
 			isolate({
 				plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
-				lines(rare_curve(apply(previous_sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+				lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 				lapply(previous_rarefaction_curves_list(), lines, lwd=2, col="green")	# Drawing all alpha scale curves
 				# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
 					# temp=previous_rarefaction_curves_list()[[site]]
@@ -673,8 +687,8 @@ shinyServer(function(input, output, session) {
 		insertUI(
 			selector = "#previous_sampling_gamma_table",
 			where = "afterEnd",
-			# ui = tableOutput("previous_sampling_alpha_summary_table")
-			ui = tableOutput("quicktesttext")
+			ui = tableOutput("previous_sampling_alpha_summary_table")
+			# ui = tableOutput("quicktesttext")
 		)
 
 		insertUI(
