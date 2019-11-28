@@ -23,10 +23,10 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				column(width=3,
 					# Slider inputs
 					sliderInput("N", "Number of individuals",
-									min=10, max=5000, value=2500, step=50, ticks=F),
+									min=10, max=5000, value=1000, step=10, ticks=F),
 					
 					sliderInput("S", "Species Richness",
-									min=5, max=500, value=100, step=5, ticks=F),
+									min=5, max=500, value=40, step=5, ticks=F),
 					
 					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
 					
@@ -95,26 +95,30 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 	),
 	
 	tabPanel("Sampling",
-		column(width=6,
-			column(width=4, selectInput("sampling_method", label="Sampling Method", choices=c("random","grid"), selected="random")), #,"transect"
-			column(width=4, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
-			column(width=4, numericInput("area_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005)),
-			
-			# column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
-			# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
-			column(width=6, 
-				actionButton("new_sampling_button", label="New sampling"),
-				actionButton("keepRarefactionCurvesPlot", label='Keep this sampling design')
-			),	#, style = "margin-top: 25px;"
-			
-			fluidRow(
+		tableOutput("community_summary_table"),
+		column(width=4, selectInput("sampling_method", label="Sampling Method", choices=c("random","grid"), selected="random")), #,"transect"
+		column(width=4, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
+		column(width=4, numericInput("area_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005)),
+		
+		# column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
+		# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
+		column(width=6, 
+			actionButton("new_sampling_button", label="New sampling"),
+			actionButton("keepRarefactionCurvesPlot", label='Keep this sampling design')
+		),	#, style = "margin-top: 25px;"
+		
+		fluidRow(
 			# Simulation
 				# verbatimTextOutput("samplingsimulationsummary", placeholder=FALSE),
 				# plotOutput("sampling_hist", height="600px",width="500px")
 			# Tables
+			column(width=4,
 				tableOutput("sampling_gamma_table"),
+				tableOutput("sampling_alpha_summary_table")
+			),
 				# dataTableOutput("sampling_alpha_table")
 			# Plots
+			column(width=4,
 				plotOutput("rarefaction_curves_plot",
 					# click = "rarefaction_curves_plot_click",
 					dblclick = "rarefaction_curves_plot_dblclick",
@@ -123,11 +127,10 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 						resetOnNew = TRUE),
 					hover = hoverOpts(id ="rarefaction_curves_plot_hover")
 				)
+			),
+			column(width=4,
+				plotOutput("sampling_plot", click="sampling_plot_click")	#, height="600px",width="600px"
 			)
-		),
-		column(width=6,
-			tableOutput("community_summary_table"),
-			plotOutput("sampling_plot", height="600px",width="600px", click="sampling_plot_click")
 		)
 	)
 )
