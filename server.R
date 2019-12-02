@@ -757,7 +757,148 @@ shinyServer(function(input, output, session) {
 		# plot(density(unlist(session$userData$standardised_difference)), main="Abundance assessment\naccuracy", las=1)
 	# })
 	
+	
+	###############################################################################################
+	# STEP BY STEP
+						
+	## Parameters
+	output$sbsCVslider <- renderUI({
+		switch(input$sbssad_type,
+			"lnorm"=sliderInput("sbscoef", label="CV(abundance), i.e. standard deviation of abundances divided by the mean abundance",value=1, min=0, max=5, step=0.1, ticks=F),
+			"geom"=sliderInput("sbscoef", label="Probability of success in each trial. 0 < prob <= 1", value=0.5, min=0, max=1, step=0.1, ticks=F),
+			"ls"=textInput("sbscoef", label="Fisher's alpha parameter", value=1)
+		)
+	})
+	
+	
+	
+	## community simulation
+	sbssim.com <- reactive({
+		input$sbsRestart
+    
+		isolate({
+			# set.seed(229377)	# 229376
+		
+			spatagg_num <- as.numeric(unlist(strsplit(trimws(input$sbsspatagg), ",")))
+			spatcoef_num <- as.numeric(unlist(strsplit(trimws(input$sbsspatcoef), ",")))
+		 
+			if(input$sbsspatdist=="n.mother") n.mother <- spatcoef_num else n.mother <- NA
+			if(input$sbsspatdist=="n.cluster") n.cluster <- spatcoef_num else n.cluster <- NA
+			
+			simulation_parameters <- list(mother_points=n.mother,
+																		cluster_points=n.cluster,
+																		xmother=NA,
+																		ymother=NA)
+									
 
+			switch(input$sbssad_type,
+							"lnorm"=sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN, 
+								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+								sad_type = input$sbssad_type, sad_coef=list(cv_abund=input$sbscoef),
+								fix_s_sim = T),
+							"geom"=sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN,
+								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+								sad_type = input$sbssad_type, sad_coef=list(prob=input$sbscoef),
+								fix_s_sim = T),
+							"ls"=sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN,
+								sad_type = input$sbssad_type, sad_coef=list(N=input$sbsN,alpha=as.numeric(input$sbscoef)),
+								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+								fix_s_sim = T)
+						)
+
+		# session$userData$sbsprevious.sim.com <- sbssim.com()
+		
+		})
+	})
+
+	## Community summary
+	output$sbscommunity_summary_table <- renderTable({
+		input$sbsRestart
+		# data.frame(sbsspatagg=input$sbsspatagg,
+			# sbscoef=input$sbscoef,
+			# sbsspatcoef=input$sbsspatcoef,
+			# sbsspatdist=input$sbsspatdist,
+			# sbssad_type=input$sbssad_type,
+			# sbsS=input$sbsS,
+			# sbsN=input$sbsN)
+		# data.frame(isnull=is.null(sbssim.com()),
+			# class=class(sbssim.com()),
+			# length=length(sbssim.com()))
+		# sbssim.com()$census
+		data.frame(Community = "",
+						n_species = length(levels(sbssim.com()$census$species)),
+						n_individuals = nrow(sbssim.com()$census))
+	})
+	
+	## Sampling 
+	sbssampling_quadrats <- reactive({
+		input$sbsnew_sampling_button
+		
+		sample_quadrats(comm=sbssim.com(), n_quadrats=input$sbsnumber_of_quadrats, quadrat_area=input$sbsarea_of_quadrats, avoid_overlap=T, plot=F)
+	})
+	
+	## Sampling summary
+	### gamma scale
+		output$sbsgamma_table <- renderTable({
+		input$sbsRestart
+		
+		isolate({
+			abund <- apply(sbssampling_quadrats()$spec_dat, 2, sum)
+			abund <- abund[abund > 0]
+			relabund <- abund/sum(abund)
+			shannon <- - sum(relabund * log(relabund))
+			simpson <- 1- sum(relabund^2)
+			data.frame(
+							Gamma = "",
+							n_species= sum(abund >0),
+							shannon = round(shannon, 3),
+							# ens_shannon = round(exp(shannon), 3),
+							simpson = round(simpson, 3)
+							# ens_simpson = round(1/(1 - simpson), 3)
+			)
+		})
+	})
+							
+
+	### alpha scale
+	output$sbsalpha_summary_table <- renderTable({
+		input$sbsRestart
+		input$sbsnew_sampling_button
+		isolate({
+			quadrats_coordinates <- sbssampling_quadrats()$xy_dat
+			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
+				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sbssim.com())
+			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
+			funs <- list(min=min, max=max, mean=mean, sd=sd)
+			data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
+		})
+	})
+
+	
+	## Plot the community and sampling squares
+	
+	output$sbssampling_plot <- renderPlot({
+		# isolate({
+			quadrats_coordinates <- sbssampling_quadrats()$xy_dat
+			plot(sbssim.com(), main = "Community distribution")
+			graphics::rect(quadrats_coordinates$x,
+								quadrats_coordinates$y,
+								quadrats_coordinates$x + sqrt(input$sbsarea_of_quadrats),
+								quadrats_coordinates$y + sqrt(input$sbsarea_of_quadrats),
+								lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
+		# })
+	})
+	
+	
+	output$sbsdistance_decay_plot <- renderPlot({
+		input$sbsRestart
+		input$sbsnew_sampling_button
+		
+		isolate({
+			plot(dist_decay_quadrats(sbssampling_quadrats(), method = "bray", binary = F))
+		})
+	})
+	
 	
 	
 	

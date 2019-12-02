@@ -14,7 +14,7 @@ library(DT)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
+navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	tabPanel("MOBsim", 
 
@@ -133,7 +133,63 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				plotOutput("sampling_distance_decay_plot")
 			)
 		)
+	),
+	tabPanel("Step-by-step",
+		sidebarLayout(
+			sidebarPanel(
+				# number of species
+				numericInput("sbsS", "Species Richness", min=5, max=500, value=5, step=5),
+				# number of individuals
+				numericInput("sbsN", "Number of individuals", min=10, max=5000, value=100, step=10),
+				
+				selectizeInput("sbssad_type", "SAD Type", choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls")),
+
+				uiOutput("sbsCVslider"),
+				textInput(inputId="sbsspatagg", label="Spatial Aggregation (mean distance from mother points)", value = 0.1),
+				selectizeInput(inputId="sbsspatdist", "Cluster parameter", choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster")),
+				
+				textInput(inputId="sbsspatcoef",label="Integer values separated by commas", value="0"),			
+
+				
+				# Restart action button
+				actionButton(inputId="sbsRestart",label="Restart Simulation"),
+				
+				# sampling parameters (?)
+				numericInput("sbsnumber_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1),
+				numericInput("sbsarea_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005),
+				actionButton("sbsnew_sampling_button", label="New sampling")
+				# Next step
+			),
+			mainPanel(
+				fluidRow(align="center",
+					column(width=4,
+						tableOutput("sbscommunity_summary_table"),
+						tableOutput("sbsgamma_table"),
+						tableOutput("sbsalpha_summary_table")
+					),
+					column(width=4,
+						plotOutput("sbssampling_plot")
+					),
+					column(width=4,
+						plotOutput("sbsdistance_decay_plot")
+					)
+				)
+			)
+		# plot of the community
+		# distance decay
+		# save plot / go back / abort distance decay analysis / delete community / New community
+		)
 	)
 		
-
+	# COMPARING SAMPLING OF TWO COMMUNITIES
+	## Summary of the communities
+	
+	## Plot of the communities
+	
+	## Sampling parameters
+	
+	## Plot of the rarefaction curves
+	
+	## Plot of the distance decay
+	
 )
