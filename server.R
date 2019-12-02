@@ -382,8 +382,8 @@ shinyServer(function(input, output, session) {
 		input$new_sampling_button
 		
 		isolate({
-			session$userData$sampled_quadrats <- sampling_quadrats()
-			quadrats_coordinates <- session$userData$sampled_quadrats$xy_dat
+			# session$userData$sampled_quadrats <- sampling_quadrats()
+			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			plot(session$userData$sim.com, main = "Community distribution")
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
@@ -391,7 +391,7 @@ shinyServer(function(input, output, session) {
 								quadrats_coordinates$y + sqrt(input$area_of_quadrats),
 								lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
 			# points(input$sampling_plot_click$x, input$sampling_plot_click$y, pch="x", col="red")	# debugging help
-			# text(session$userData$sampled_quadrats$xy_dat$x, session$userData$sampled_quadrats$xy_dat$y, pch=as.character(1:nrow(session$userData$sampled_quadrats$xy_dat)))	# debugging help
+			# text(sampling_quadrats()$xy_dat$x, sampling_quadrats()$xy_dat$y, pch=as.character(1:nrow(sampling_quadrats()$xy_dat)))	# debugging help
 		})
 		
 		if(!is.null(input$rarefaction_curves_plot_click)) {	# highlight
@@ -437,7 +437,7 @@ shinyServer(function(input, output, session) {
 		input$Restart
 		input$new_sampling_button
 		isolate({
-			abund <- apply(session$userData$sampled_quadrats$spec_dat, 2, sum)
+			abund <- apply(sampling_quadrats()$spec_dat, 2, sum)
 			abund <- abund[abund > 0]
 			relabund <- abund/sum(abund)
 			shannon <- - sum(relabund * log(relabund))
@@ -479,7 +479,7 @@ shinyServer(function(input, output, session) {
 		input$Restart
 		input$new_sampling_button
 		isolate({
-			quadrats_coordinates <- session$userData$sampled_quadrats$xy_dat
+			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			DT::datatable(
 				t(round(sapply(1:nrow(quadrats_coordinates), function(i) div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)), 3))[,c('n_species','n_endemics','shannon','simpson')],
 				options=list(searching = FALSE, info = TRUE, sort = TRUE))
@@ -490,7 +490,7 @@ shinyServer(function(input, output, session) {
 		input$Restart
 		input$new_sampling_button
 		isolate({
-			quadrats_coordinates <- session$userData$sampled_quadrats$xy_dat
+			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
 				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)
 			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
@@ -515,7 +515,7 @@ shinyServer(function(input, output, session) {
 	## Sampling efficiency plot
 	### computing the rarefaction curves
 	rarefaction_curves_list <- reactive({
-		apply(session$userData$sampled_quadrats$spec_dat, 1, function(site) {
+		apply(sampling_quadrats()$spec_dat, 1, function(site) {
 			rare_curve(site)
 		})
 	})
@@ -534,7 +534,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
-			lines(rare_curve(apply(session$userData$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(rarefaction_curves_list(), lines, lwd=2, col="green")	# Drawing all alpha scale curves
 			# for (site in names(rarefaction_curves_list())) {		# verification aid
 				# temp=rarefaction_curves_list()[[site]]
@@ -600,8 +600,8 @@ shinyServer(function(input, output, session) {
 
 	sampling_plot_click_info <- reactive({	# gives the selected site name
 		if(!is.null(input$sampling_plot_click)) {
-			x0 <- session$userData$sampled_quadrats$xy_dat$x
-			y0 <- session$userData$sampled_quadrats$xy_dat$y
+			x0 <- sampling_quadrats()$xy_dat$x
+			y0 <- sampling_quadrats()$xy_dat$y
 			size <- sqrt(input$area_of_quadrats)
 			
 			click <- input$sampling_plot_click
@@ -610,7 +610,7 @@ shinyServer(function(input, output, session) {
 			for(site in 1:input$number_of_quadrats) {
 				which_site[site] <- (click$x >= x0[site] & click$x < (x0[site] + size) & click$y >= y0[site] & click$y < (y0[site] + size))
 			}
-			rownames(session$userData$sampled_quadrats$xy_dat)[which_site]
+			rownames(sampling_quadrats()$xy_dat)[which_site]
 		}
 	})
 	
@@ -649,9 +649,9 @@ shinyServer(function(input, output, session) {
 		# output$quicktesttext <- renderTable(data.frame(length=length(session$userData$previous_sampled_quadrats),
 				# class=class(session$userData$previous_sampled_quadrats),
 				# isnull=is.null(session$userData$previous_sampled_quadrats)))
-		output$quicktesttext <- renderTable(data.frame(length=length(session$userData$sampled_quadrats$spec_dat),
-				class=class(session$userData$sampled_quadrats$spec_dat),
-				isnull=is.null(session$userData$sampled_quadrats$spec_dat)))
+		output$quicktesttext <- renderTable(data.frame(length=length(sampling_quadrats()$spec_dat),
+				class=class(sampling_quadrats()$spec_dat),
+				isnull=is.null(sampling_quadrats()$spec_dat)))
 				
 		previous_rarefaction_curves_list <- reactive({
 			isolate({
@@ -676,6 +676,7 @@ shinyServer(function(input, output, session) {
 				# }
 			})
 		})
+
 		
 		insertUI(
 			selector = "#sampling_alpha_summary_table",
@@ -704,6 +705,17 @@ shinyServer(function(input, output, session) {
 		)
 	})
 	
+	
+	
+	## Distance decay plots
+	output$sampling_distance_decay_plot <- renderPlot({
+		input$Restart
+		input$new_sampling_button
+		
+		isolate({
+			plot(dist_decay_quadrats(sampling_quadrats(), method = "bray", binary = F))
+		})
+	})
 	
 	
 	
@@ -745,7 +757,28 @@ shinyServer(function(input, output, session) {
 		# plot(density(unlist(session$userData$standardised_difference)), main="Abundance assessment\naccuracy", las=1)
 	# })
 	
-			
+
+	
 	
 	
 })
+
+dist_decay_quadrats <- function(samples1, method = "bray", binary = F)
+{
+   com_mat <- samples1$spec_dat[rowSums(samples1$spec_dat) > 0,]
+   d <- stats::dist(samples1$xy_dat[rowSums(samples1$spec_dat) > 0,])
+
+   similarity <- 1 - vegan::vegdist(com_mat, method = method,
+                                    binary = binary)
+   similarity[!is.finite(similarity)] <- NA
+
+   dat_out <- data.frame(distance = as.numeric(d),
+                         similarity = as.numeric(similarity))
+
+   # order by increasing distance
+   dat_out <- dat_out[order(dat_out$distance), ]
+
+   class(dat_out) <- c("dist_decay", "data.frame")
+
+   return(dat_out)
+}

@@ -129,8 +129,11 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				)
 			),
 			column(width=4,
-				plotOutput("sampling_plot", click="sampling_plot_click")	#, height="600px",width="600px"
+				plotOutput("sampling_plot", click="sampling_plot_click"),	#, height="600px",width="600px"
+				plotOutput("sampling_distance_decay_plot")
 			)
 		)
 	)
+		
+
 )
