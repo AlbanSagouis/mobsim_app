@@ -845,6 +845,7 @@ shinyServer(function(input, output, session) {
 	### gamma scale
 		output$sbsgamma_table <- renderTable({
 		input$sbsRestart
+		input$sbsnew_sampling_button
 		
 		isolate({
 			abund <- apply(sbssampling_quadrats()$spec_dat, 2, sum)
@@ -872,7 +873,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			quadrats_coordinates <- sbssampling_quadrats()$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
-				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sbssim.com())
+				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$sbsarea_of_quadrats), comm=sbssim.com())
 			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
 			funs <- list(min=min, max=max, mean=mean, sd=sd)
 			data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
@@ -1001,7 +1002,7 @@ shinyServer(function(input, output, session) {
 			isolate({
 				quadrats_coordinates <- sbssampling_quadrats()$xy_dat
 				temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
-					div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sbssim.com())
+					div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$sbsarea_of_quadrats), comm=sbssim.com())
 				}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
 				funs <- list(min=min, max=max, mean=mean, sd=sd)
 				data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
