@@ -535,7 +535,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
 			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
-			lapply(rarefaction_curves_list(), lines, lwd=2, col="green")	# Drawing all alpha scale curves
+			lapply(rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(rarefaction_curves_list())) {		# verification aid
 				# temp=rarefaction_curves_list()[[site]]
 				# text(gsub(site, pattern="site", replacement=""), x=10, y=temp[10])
@@ -561,7 +561,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
 			lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
-			lapply(previous_rarefaction_curves_list(), lines, lwd=2, col="green")	# Drawing all alpha scale curves
+			lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
 				# temp=previous_rarefaction_curves_list()[[site]]
 				# text(gsub(site, pattern="site", replacement=""), x=10, y=temp[10])
@@ -669,7 +669,7 @@ shinyServer(function(input, output, session) {
 			isolate({
 				plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
 				lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
-				lapply(previous_rarefaction_curves_list(), lines, lwd=2, col="green")	# Drawing all alpha scale curves
+				lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 				# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
 					# temp=previous_rarefaction_curves_list()[[site]]
 					# text(gsub(site, pattern="site", replacement=""), x=10, y=temp[10])
@@ -713,7 +713,7 @@ shinyServer(function(input, output, session) {
 		input$new_sampling_button
 		
 		isolate({
-			plot(dist_decay_quadrats(sampling_quadrats(), method = "bray", binary = F))
+			plot(dist_decay_quadrats(sampling_quadrats(), method = "bray", binary = F), ylim=c(0,1))
 		})
 	})
 	
@@ -901,7 +901,7 @@ shinyServer(function(input, output, session) {
 		input$sbsnew_sampling_button
 		
 		isolate({
-			plot(dist_decay_quadrats(sbssampling_quadrats(), method = "bray", binary = F))
+			plot(dist_decay_quadrats(sbssampling_quadrats(), method = "bray", binary = F), ylim=c(0,1))
 		})
 	})
 	
@@ -1023,20 +1023,18 @@ shinyServer(function(input, output, session) {
 		
 		output[[distance_decay_plot_ID]] <- renderPlot({
 			isolate({
-				plot(dist_decay_quadrats(sbssampling_quadrats(), method = "bray", binary = F))
+				plot(dist_decay_quadrats(sbssampling_quadrats(), method = "bray", binary = F), ylim=c(0,1))
 			})
 		})
 
       # make a note of the ID of this section, so that it is not repeated accidentally
       sbsvalues[[divID]] <- TRUE
       
-      # create a listener on the newly-created button that will remove it from the app when clicked
-      observeEvent(input[[btnID]], {
-        removeUI(selector = paste0("#", divID))
-        
-        sbsvalues[[divID]] <- NULL
-        
-      }, ignoreInit = TRUE, once = TRUE)
+		# create a listener on the newly-created button that will remove it from the app when clicked
+		observeEvent(input[[btnID]], {
+			removeUI(selector = paste0("#", divID))
+			sbsvalues[[divID]] <- NULL
+		}, ignoreInit = TRUE, once = TRUE)
       
       # otherwise, print a message to the console
     } else {
