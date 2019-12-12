@@ -16,6 +16,38 @@ library(mobsim, lib.loc="./Library")
 
 # Define server logic for slider examples
 shinyServer(function(input, output, session) {
+
+	values <- reactiveValues()
+
+	# Big table
+	values$sim_ID <- 1
+	# values$bigtable <- data.frame()
+	values$bigtable <- matrix(NA, nrow=0, ncol=7, dimnames=list(c(), c('sim_ID','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling')))
+	
+	
+	output$bigtable_output <- renderDataTable({
+		input$sbsRestart
+		input$sbsnew_sampling_button
+		
+		isolate({
+			values$bigtable <- rbind(values$bigtable, c(
+				sim_ID = values$sim_ID + 1,
+				n_species = input$sbsS,
+				n_individuals = input$sbsN,
+				seed_simulation = NA,
+				n_quadrats = input$sbsnumber_of_quadrats,
+				quadrat_area = input$sbsarea_of_quadrats,
+				seed_sampling = NA
+			))
+			values$bigtable
+			# data.frame(nrow=nrow(values$bigtable), c1=values$bigtable[,1])
+			# data.frame(is.null=is.null(values$sim_ID))
+		})
+	})
+	
+	
+	#########################################################################################################
+	# SIMULATION
   
   # update range for species richness, an observed species has minimum one individual
 	observe({
@@ -345,7 +377,7 @@ shinyServer(function(input, output, session) {
 	
 	
 	
-	
+	#########################################################################################
 	# Sampling
 	# Sampling
 	## Community summary
@@ -758,9 +790,20 @@ shinyServer(function(input, output, session) {
 	# })
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	###############################################################################################
 	# STEP BY STEP
-						
+	sbsvalues <- reactiveValues()
+	
 	## Parameters
 	# update range for species richness, an observed species has minimum one individual
 	observe({
@@ -843,7 +886,7 @@ shinyServer(function(input, output, session) {
 	
 	## Sampling summary
 	### gamma scale
-		output$sbsgamma_table <- renderTable({
+	output$sbsgamma_table <- renderTable({
 		input$sbsRestart
 		input$sbsnew_sampling_button
 		
@@ -881,10 +924,11 @@ shinyServer(function(input, output, session) {
 	})
 
 	
-	## Plot the community and sampling squares
+	## Plots
+	### community and sampling squares
 	
 	output$sbssampling_plot <- renderPlot({
-		# isolate({
+		isolate({
 			quadrats_coordinates <- sbssampling_quadrats()$xy_dat
 			plot(sbssim.com(), main = "Community distribution")
 			graphics::rect(quadrats_coordinates$x,
@@ -892,10 +936,10 @@ shinyServer(function(input, output, session) {
 								quadrats_coordinates$x + sqrt(input$sbsarea_of_quadrats),
 								quadrats_coordinates$y + sqrt(input$sbsarea_of_quadrats),
 								lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
-		# })
+		})
 	})
 	
-	
+	### distance decay plot
 	output$sbsdistance_decay_plot <- renderPlot({
 		input$sbsRestart
 		input$sbsnew_sampling_button
@@ -906,141 +950,71 @@ shinyServer(function(input, output, session) {
 	})
 	
 	
+	### rarefaction curves
+	#### Computing
+	sbsrarefaction_curves_list <- reactive({
+		apply(sbssampling_quadrats()$spec_dat, 1, function(site) {
+			rare_curve(site)
+		})
+	})
+	
+	#### Saving
+	sbsvalues$rarefaction_curve_counter <- 1
+	# sbsvalues
+	# sbsrarefaction_curves_previous <- reactiveValues({
+		# input$sbskeep_step
+		
+		
+			
+	
+	#### Plotting
+	sbsvalues$ranges <- c(x = NULL, y = NULL)		# used to zoom in the plot
+	
+	output$sbsrarefaction_curves_plot <- renderPlot({
+		input$sbsRestart
+		input$sbsnew_sampling_button
+		input$sbsrarefaction_curves_plot_dblclick	# zooming in and out
+		# input$rarefaction_curves_plot_click	# highlighting individual site
+		# input$sampling_plot_click_info			# highlighting individual site
+		
+		isolate({
+			plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y)
+			lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+			lapply(sbsrarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
+			# for (site in names(sbsrarefaction_curves_list())) {		# verification aid
+				# temp=sbsrarefaction_curves_list()[[site]]
+				# text(gsub(site, pattern="site", replacement=""), x=10, y=temp[10])
+			# }			
+		})
+		
+		# if(!is.null(input$sampling_plot_click)) {	# highlight
+			# lines(sbsrarefaction_curves_list()[[sampling_plot_click_info()]], lwd=4, col="forestgreen")
+		# }
+		
+		# if(!is.null(input$rarefaction_curves_plot_click)) {	# highlight
+			# lines(sbsrarefaction_curves_list()[[rarefaction_curves_hover_info()]], lwd=4, col="forestgreen")
+		# }
+	})
+	
+	
+	
 	output$sbsfirst_step <- renderUI({
 		fluidRow(align="center",
 			column(width=4,
 				tableOutput("sbscommunity_summary_table"),
 				tableOutput("sbsgamma_table"),
 				tableOutput("sbsalpha_summary_table")
+				# dataTableOutput("bigtable_output")
 			),
 			column(width=4,
 				plotOutput("sbssampling_plot")
 			),
 			column(width=4,
-				plotOutput("sbsdistance_decay_plot")
+				plotOutput("sbsrarefaction_curves_plot")
 			),
 			hr()
 		)
 	})
-	
-	
-	########## END OF FIRST STEP
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	sbsvalues <- reactiveValues()
-	
-	observeEvent(input$sbskeep_step, {
-		# ui ID
-		divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3"))
-		btnID <- paste0(divID, "rmv")
-		community_summary_id <- paste0(divID, "comm")
-		gamma_table_id <- paste0(divID, "gamm")
-		alpha_summary_table_id <- paste0(divID, "alph")
-		sampling_plot_ID <- paste0(divID, "samp")
-		distance_decay_plot_ID <- paste0(divID, "dist")
-	
-		# only create button if there is none
-		if (is.null(sbsvalues[[divID]])) {
-      
-			insertUI(
-				selector = "#sbsfirst_step",
-				where="afterEnd",
-				ui = tags$div(id = divID,
-					fluidRow(
-						column(width=4,
-							tableOutput(community_summary_id),
-							tableOutput(gamma_table_id),
-							tableOutput(alpha_summary_table_id),
-							actionButton(btnID, "Remove this step", class = "pull-right btn btn-danger")
-						),
-						column(width=4,
-							plotOutput(sampling_plot_ID)
-						),
-						column(width=4,
-							plotOutput(distance_decay_plot_ID)
-						)
-					)
-				)
-			)
-      
-      output[[community_summary_id]] <- renderTable({
-			isolate({
-				data.frame(Community = "",
-							n_species = length(levels(sbssim.com()$census$species)),
-							n_individuals = nrow(sbssim.com()$census))
-			})
-		})
-		
-      output[[gamma_table_id]] <- renderTable({
-			isolate({
-				abund <- apply(sbssampling_quadrats()$spec_dat, 2, sum)
-				abund <- abund[abund > 0]
-				relabund <- abund/sum(abund)
-				shannon <- - sum(relabund * log(relabund))
-				simpson <- 1- sum(relabund^2)
-				data.frame(
-								Gamma = "",
-								n_species= sum(abund >0),
-								shannon = round(shannon, 3),
-								# ens_shannon = round(exp(shannon), 3),
-								simpson = round(simpson, 3)
-								# ens_simpson = round(1/(1 - simpson), 3)
-				)
-			})
-		})      
-		
-		output[[alpha_summary_table_id]] <- renderTable({
-			isolate({
-				quadrats_coordinates <- sbssampling_quadrats()$xy_dat
-				temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
-					div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$sbsarea_of_quadrats), comm=sbssim.com())
-				}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
-				funs <- list(min=min, max=max, mean=mean, sd=sd)
-				data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
-			})
-		})
-		
-		output[[sampling_plot_ID]] <- renderPlot({
-			isolate({
-				quadrats_coordinates <- sbssampling_quadrats()$xy_dat
-				plot(sbssim.com(), main = "Community distribution")
-				graphics::rect(quadrats_coordinates$x,
-									quadrats_coordinates$y,
-									quadrats_coordinates$x + sqrt(input$sbsarea_of_quadrats),
-									quadrats_coordinates$y + sqrt(input$sbsarea_of_quadrats),
-									lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
-			})
-		})
-		
-		output[[distance_decay_plot_ID]] <- renderPlot({
-			isolate({
-				plot(dist_decay_quadrats(sbssampling_quadrats(), method = "bray", binary = F), ylim=c(0,1))
-			})
-		})
-
-      # make a note of the ID of this section, so that it is not repeated accidentally
-      sbsvalues[[divID]] <- TRUE
-      
-		# create a listener on the newly-created button that will remove it from the app when clicked
-		observeEvent(input[[btnID]], {
-			removeUI(selector = paste0("#", divID))
-			sbsvalues[[divID]] <- NULL
-		}, ignoreInit = TRUE, once = TRUE)
-      
-      # otherwise, print a message to the console
-    } else {
-      message("The button has already been created!")
-    }
-  })
 
 }) # end of server()
 

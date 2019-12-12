@@ -135,6 +135,11 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 		)
 	),
 	tabPanel("Step-by-step",
+        # tags$head(tags$style(HTML("
+        # . {
+          # font-size: 75%;
+        # }
+        # "))),
 		sidebarLayout(
 			sidebarPanel(
 				fluidRow(
@@ -173,23 +178,13 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 				actionButton("sbskeep_step", label="Next step")
 			),
 			mainPanel(
+			# plot of the community
+			# distance decay
 				uiOutput("sbsfirst_step")
 			)
-		# plot of the community
-		# distance decay
-		# save plot / go back / abort distance decay analysis / delete community / New community
 		)
+	),
+	tabPanel("Big Table",
+		dataTableOutput("bigtable_output")
 	)
-		
-	# COMPARING SAMPLING OF TWO COMMUNITIES
-	## Summary of the communities
-	
-	## Plot of the communities
-	
-	## Sampling parameters
-	
-	## Plot of the rarefaction curves
-	
-	## Plot of the distance decay
-	
 )
