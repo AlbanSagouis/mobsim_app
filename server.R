@@ -20,30 +20,67 @@ shinyServer(function(input, output, session) {
 	values <- reactiveValues()
 
 	# Big table
-	values$sim_ID <- 1
-	# values$bigtable <- data.frame()
+	
+	session$userData$sim_ID <- 1
 	values$bigtable <- matrix(NA, nrow=0, ncol=7, dimnames=list(c(), c('sim_ID','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling')))
 	
-	
-	output$bigtable_output <- renderDataTable({
+	## Adding rows to the simulation table
+	### From Simulation and sampling tabs
+	observe({
+		input$Restart
+		input$new_sampling_button
+		
+		isolate({
+			session$userData$sim_ID <- session$userData$sim_ID + 1
+			values$bigtable <- rbind(values$bigtable, c(
+				sim_ID = session$userData$sim_ID,
+				n_species = input$S,
+				n_individuals = input$N,
+				seed_simulation = seed_simulation(),
+				n_quadrats = input$number_of_quadrats,
+				quadrat_area = input$area_of_quadrats,
+				seed_sampling = seed_sampling()
+			))
+		})
+	})
+	### From step-by-step tab
+	observe({
 		input$sbsRestart
 		input$sbsnew_sampling_button
 		
 		isolate({
+			session$userData$sim_ID <- session$userData$sim_ID + 1
 			values$bigtable <- rbind(values$bigtable, c(
-				sim_ID = values$sim_ID + 1,
+				sim_ID = session$userData$sim_ID,
 				n_species = input$sbsS,
 				n_individuals = input$sbsN,
-				seed_simulation = NA,
+				seed_simulation = seed_simulation(),
 				n_quadrats = input$sbsnumber_of_quadrats,
 				quadrat_area = input$sbsarea_of_quadrats,
-				seed_sampling = NA
+				seed_sampling = seed_sampling()
 			))
-			values$bigtable
-			# data.frame(nrow=nrow(values$bigtable), c1=values$bigtable[,1])
-			# data.frame(is.null=is.null(values$sim_ID))
 		})
 	})
+	
+	## Remove all simulations
+	observeEvent(input$rem_all_simulations, {
+		values$bigtable <- matrix(NA, nrow=0, ncol=7, dimnames=list(c(), c('sim_ID','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling')))
+	})
+	
+	## Remove selected simulations
+	observeEvent(input$rem_selected_simulations, {
+		values$bigtable <- values$bigtable[-as.numeric(input$bigtable_output_rows_selected), ]
+	})
+	
+	## Download simulation table
+	output$downloadSimulationTable <- downloadHandler(
+		filename = function() {paste("Simulation_table.csv", sep="")},
+		content  = function(fname) {
+			write.csv(values$bigtable, file=fname)
+		}
+	)
+	
+	output$bigtable_output <- renderDataTable(values$bigtable)	
 	
 	
 	#########################################################################################################
@@ -85,7 +122,24 @@ shinyServer(function(input, output, session) {
 			textInput(inputId="spatagg", label="Spatial Aggregation (mean distance from mother points)", value = 0.1)
 		}			
 	})
-
+	
+	seed_simulation <- reactive({
+		input$Restart
+		input$new_sampling_button
+		input$sbsRestart
+		input$sbsnew_sampling_button
+		
+		sample(1:2^15, 1)
+	})
+	
+	seed_sampling <- reactive({
+		input$Restart
+		input$new_sampling_button
+		input$sbsRestart
+		input$sbsnew_sampling_button
+		
+		sample(1:2^15, 1)
+	})
 
 	##		random_mother_points
 
@@ -157,21 +211,21 @@ shinyServer(function(input, output, session) {
 	## point coordinates
 	### storing coordinates
 	observeEvent(input$plot_click, {
-	add_row = data.frame(species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")),
-								x = input$plot_click$x,
-								y = input$plot_click$y
-							 )
-	values$DT = rbind(values$DT, add_row)
+		add_row = data.frame(species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")),
+									x = input$plot_click$x,
+									y = input$plot_click$y
+								 )
+		values$DT = rbind(values$DT, add_row)
 	})
 
 	observeEvent(input$rem_all_points, {
-	 rem_row = values$DT[-(1:nrow(values$DT)), ]
-	 values$DT = rem_row
+		rem_row = values$DT[-(1:nrow(values$DT)), ]
+		values$DT = rem_row
 	})
 		 
 	observeEvent(input$rem_point, {
-	 rem_row = values$DT[-nrow(values$DT), ]
-	 values$DT = rem_row
+		rem_row = values$DT[-nrow(values$DT), ]
+		values$DT = rem_row
 	})
 
 	### showing coordinates in a text box
@@ -234,7 +288,7 @@ shinyServer(function(input, output, session) {
 							 4,5,6), byrow = T, nrow = 1, ncol = 6),
 				 heights = c(1,1), widths=c(1,1,1))
 		
-		set.seed(229377)	# 229376
+		# set.seed(229377)	# 229376
 		
 		sad1 <- community_to_sad(sim.com)
 		sac1 <- spec_sample_curve(sim.com)
@@ -263,7 +317,7 @@ shinyServer(function(input, output, session) {
 		
 		if(input$method_type != "uploading_community_data") {
       
-		set.seed(229377)	# 229376
+		# set.seed(229377)	# 229376
 		
 		
 			spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spatagg), ",")))
@@ -290,15 +344,15 @@ shinyServer(function(input, output, session) {
 							"lnorm"=sim_thomas_community(s_pool = input$S, n_sim = input$N, 
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sad_type, sad_coef=list(cv_abund=input$coef),
-								fix_s_sim = T),
+								fix_s_sim = T, seed = seed_simulation()),
 							"geom"=sim_thomas_community(s_pool = input$S, n_sim = input$N,
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sad_type, sad_coef=list(prob=input$coef),
-								fix_s_sim = T),
+								fix_s_sim = T, seed = seed_simulation()),
 							"ls"=sim_thomas_community(s_pool = input$S, n_sim = input$N,
 								sad_type = input$sad_type, sad_coef=list(N=input$N,alpha=as.numeric(input$coef)),
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
-								fix_s_sim = T)
+								fix_s_sim = T, seed = seed_simulation())
 						)
 		} else {
 			session$userData$sim.com <- get(load(input$loaded_file$datapath))
@@ -842,15 +896,15 @@ shinyServer(function(input, output, session) {
 							"lnorm"=sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN, 
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sbssad_type, sad_coef=list(cv_abund=input$sbscoef),
-								fix_s_sim = T),
+								fix_s_sim = T, seed = seed_simulation()),
 							"geom"=sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN,
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sbssad_type, sad_coef=list(prob=input$sbscoef),
-								fix_s_sim = T),
+								fix_s_sim = T, seed = seed_simulation()),
 							"ls"=sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN,
 								sad_type = input$sbssad_type, sad_coef=list(N=input$sbsN,alpha=as.numeric(input$sbscoef)),
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
-								fix_s_sim = T)
+								fix_s_sim = T, seed = seed_simulation())
 						)
 
 		# session$userData$sbsprevious.sim.com <- sbssim.com()
@@ -928,6 +982,9 @@ shinyServer(function(input, output, session) {
 	### community and sampling squares
 	
 	output$sbssampling_plot <- renderPlot({
+		input$sbsRestart
+		input$sbsnew_sampling_button
+		
 		isolate({
 			quadrats_coordinates <- sbssampling_quadrats()$xy_dat
 			plot(sbssim.com(), main = "Community distribution")
