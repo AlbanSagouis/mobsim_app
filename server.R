@@ -14,6 +14,12 @@ library(mobsim, lib.loc="./Library")
 # library(ggplot2)
 # library(markdown)
 
+bigtable_names <- c('sim_ID','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
+	 'gamma_richness','gamma_shannon','gamma_simpson',
+	 'alpha_mean_richness','alpha_mean_shannon','alpha_mean_simpson'
+)
+empty_bigtable <- function() matrix(NA, nrow=0, ncol=length(bigtable_names), dimnames=list(c(), bigtable_names))
+
 # Define server logic for slider examples
 shinyServer(function(input, output, session) {
 
@@ -22,13 +28,36 @@ shinyServer(function(input, output, session) {
 	# Big table
 	
 	session$userData$sim_ID <- 1
-	values$bigtable <- matrix(NA, nrow=0, ncol=7, dimnames=list(c(), c('sim_ID','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling')))
+	values$bigtable <- empty_bigtable()
 	
 	## Adding rows to the simulation table
 	### From Simulation and sampling tabs
-	observe({
-		input$Restart
-		input$new_sampling_button
+	#### Restart button
+	observeEvent(
+		input$Restart, {
+
+		isolate({
+			session$userData$sim_ID <- session$userData$sim_ID + 1
+			values$bigtable <- rbind(values$bigtable, c(
+				sim_ID = session$userData$sim_ID,
+				n_species = input$S,
+				n_individuals = input$N,
+				seed_simulation = seed_simulation(),
+				n_quadrats = NA,
+				quadrat_area =NA,
+				seed_sampling = NA,
+				gamma_richness = NA,
+				gamma_shannon = NA,
+				gamma_simpson = NA,
+				alpha_mean_richness = NA,
+				alpha_mean_shannon = NA,
+				alpha_mean_simpson = NA
+			))
+		})
+	})
+	#### New sampling button
+	observeEvent(
+		input$new_sampling_button, {
 		
 		isolate({
 			session$userData$sim_ID <- session$userData$sim_ID + 1
@@ -39,15 +68,22 @@ shinyServer(function(input, output, session) {
 				seed_simulation = seed_simulation(),
 				n_quadrats = input$number_of_quadrats,
 				quadrat_area = input$area_of_quadrats,
-				seed_sampling = seed_sampling()
+				seed_sampling = seed_sampling(),
+				gamma_richness = sampling_gamma_table()$n_species,
+				gamma_shannon = sampling_gamma_table()$shannon,
+				gamma_simpson = sampling_gamma_table()$simpson,
+				alpha_mean_richness = sampling_alpha_summary_table()["n_species","mean"],
+				alpha_mean_shannon = sampling_alpha_summary_table()["shannon","mean"],
+				alpha_mean_simpson = sampling_alpha_summary_table()["simpson","mean"]
 			))
 		})
 	})
+	
 	### From step-by-step tab
-	observe({
-		input$sbsRestart
-		input$sbsnew_sampling_button
-		
+	#### Restart button
+	observeEvent(
+		input$sbsRestart, {
+
 		isolate({
 			session$userData$sim_ID <- session$userData$sim_ID + 1
 			values$bigtable <- rbind(values$bigtable, c(
@@ -57,14 +93,43 @@ shinyServer(function(input, output, session) {
 				seed_simulation = seed_simulation(),
 				n_quadrats = input$sbsnumber_of_quadrats,
 				quadrat_area = input$sbsarea_of_quadrats,
-				seed_sampling = seed_sampling()
+				seed_sampling = seed_sampling(),
+				gamma_richness = sbsgamma_table()$n_species,
+				gamma_shannon = sbsgamma_table()$shannon,
+				gamma_simpson = sbsgamma_table()$simpson,
+				alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
+				alpha_mean_shannon = sbsalpha_summary_table()["shannon","mean"],
+				alpha_mean_simpson = sbsalpha_summary_table()["simpson","mean"]
+			))
+		})
+	})
+	#### New sampling button
+	observeEvent(
+		input$sbsnew_sampling_button, {
+				
+		isolate({
+			session$userData$sim_ID <- session$userData$sim_ID + 1
+			values$bigtable <- rbind(values$bigtable, c(
+				sim_ID = session$userData$sim_ID,
+				n_species = input$sbsS,
+				n_individuals = input$sbsN,
+				seed_simulation = seed_simulation(),
+				n_quadrats = input$sbsnumber_of_quadrats,
+				quadrat_area = input$sbsarea_of_quadrats,
+				seed_sampling = seed_sampling(),
+				gamma_richness = sbsgamma_table()$n_species,
+				gamma_shannon = sbsgamma_table()$shannon,
+				gamma_simpson = sbsgamma_table()$simpson,
+				alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
+				alpha_mean_shannon = sbsalpha_summary_table()["shannon","mean"],
+				alpha_mean_simpson = sbsalpha_summary_table()["simpson","mean"]
 			))
 		})
 	})
 	
 	## Remove all simulations
 	observeEvent(input$rem_all_simulations, {
-		values$bigtable <- matrix(NA, nrow=0, ncol=7, dimnames=list(c(), c('sim_ID','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling')))
+		values$bigtable <- empty_bigtable()
 	})
 	
 	## Remove selected simulations
@@ -125,9 +190,7 @@ shinyServer(function(input, output, session) {
 	
 	seed_simulation <- reactive({
 		input$Restart
-		input$new_sampling_button
 		input$sbsRestart
-		input$sbsnew_sampling_button
 		
 		sample(1:2^15, 1)
 	})
@@ -172,7 +235,6 @@ shinyServer(function(input, output, session) {
 		}
 	})
 
-	values <- reactiveValues()
 	values$DT <- data.frame(x = numeric(),
 								 y = numeric(),
 								 species_ID = factor())
@@ -287,8 +349,6 @@ shinyServer(function(input, output, session) {
 		layout(matrix(c(1,2,3,
 							 4,5,6), byrow = T, nrow = 1, ncol = 6),
 				 heights = c(1,1), widths=c(1,1,1))
-		
-		# set.seed(229377)	# 229376
 		
 		sad1 <- community_to_sad(sim.com)
 		sac1 <- spec_sample_curve(sim.com)
@@ -431,7 +491,7 @@ shinyServer(function(input, output, session) {
 	
 	
 	
-	#########################################################################################
+	######################################################################################################################################################
 	# Sampling
 	# Sampling
 	## Community summary
@@ -447,7 +507,7 @@ shinyServer(function(input, output, session) {
 	sampling_quadrats <- reactive({
 		input$new_sampling_button
 		
-		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F)
+		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F, seed=seed_sampling())
 	})
 	
 	# previous_sampling_quadrats <- reactive({
@@ -519,9 +579,10 @@ shinyServer(function(input, output, session) {
 	
 	## Sampling summary
 	### gamma scale
-	output$sampling_gamma_table <- renderTable({
+	sampling_gamma_table <- reactive({
 		input$Restart
 		input$new_sampling_button
+		
 		isolate({
 			abund <- apply(sampling_quadrats()$spec_dat, 2, sum)
 			abund <- abund[abund > 0]
@@ -538,8 +599,9 @@ shinyServer(function(input, output, session) {
 			)
 		})
 	})
+	output$sampling_gamma_table <- renderTable(sampling_gamma_table())
 	
-	output$previous_sampling_gamma_table <- renderTable({
+	previous_sampling_gamma_table <- reactive({
 		input$Restart
 		input$keepRarefactionCurvesPlot
 		isolate({
@@ -558,7 +620,7 @@ shinyServer(function(input, output, session) {
 			)
 		})
 	})
-							
+	output$previous_sampling_gamma_table <- renderTable(previous_sampling_gamma_table())
 
 	### alpha scale
 	output$sampling_alpha_table <- renderDataTable({
@@ -572,7 +634,7 @@ shinyServer(function(input, output, session) {
 		})
 	})
 	
-	output$sampling_alpha_summary_table <- renderTable({
+	sampling_alpha_summary_table <- reactive({
 		input$Restart
 		input$new_sampling_button
 		isolate({
@@ -584,6 +646,7 @@ shinyServer(function(input, output, session) {
 			data.frame(Alpha_scale=colnames(temp), round(sapply(funs, mapply, temp),3))
 		})
 	})
+	output$sampling_alpha_summary_table <- renderTable(sampling_alpha_summary_table())
 	
 	output$previous_sampling_alpha_summary_table <- renderTable({
 		input$Restart
@@ -935,12 +998,12 @@ shinyServer(function(input, output, session) {
 	sbssampling_quadrats <- reactive({
 		input$sbsnew_sampling_button
 		
-		sample_quadrats(comm=sbssim.com(), n_quadrats=input$sbsnumber_of_quadrats, quadrat_area=input$sbsarea_of_quadrats, avoid_overlap=T, plot=F)
+		sample_quadrats(comm=sbssim.com(), n_quadrats=input$sbsnumber_of_quadrats, quadrat_area=input$sbsarea_of_quadrats, avoid_overlap=T, plot=F, seed=seed_sampling())
 	})
 	
 	## Sampling summary
 	### gamma scale
-	output$sbsgamma_table <- renderTable({
+	sbsgamma_table <- reactive({
 		input$sbsRestart
 		input$sbsnew_sampling_button
 		
@@ -960,10 +1023,11 @@ shinyServer(function(input, output, session) {
 			)
 		})
 	})
-							
+	output$sbsgamma_table <- renderTable(sbsgamma_table())
+	
 
 	### alpha scale
-	output$sbsalpha_summary_table <- renderTable({
+	sbsalpha_summary_table <- reactive({
 		input$sbsRestart
 		input$sbsnew_sampling_button
 		
@@ -976,6 +1040,7 @@ shinyServer(function(input, output, session) {
 			data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
 		})
 	})
+	output$sbsalpha_summary_table <- renderTable(sbsalpha_summary_table())
 
 	
 	## Plots
