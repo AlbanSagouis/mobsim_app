@@ -145,8 +145,8 @@ shinyServer(function(input, output, session) {
 		}
 	)
 	
-	output$bigtable_output <- renderDataTable(values$bigtable)	
-	
+	output$bigtable_output <- renderDataTable(values$bigtable)
+	output$bigtable_selected_simulations <- renderPrint(paste(values$bigtable[as.numeric(input$bigtable_output_rows_selected), "sim_ID"], collapse=", "))
 	
 	#########################################################################################################
 	# SIMULATION

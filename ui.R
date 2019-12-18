@@ -186,8 +186,9 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 	),
 	tabPanel("Big Table",
 		dataTableOutput("bigtable_output"),
+		verbatimTextOutput("bigtable_selected_simulations"),
 		actionButton("rem_all_simulations", "Remove all simulations"),
 		actionButton("rem_selected_simulations", "Remove selected simulations"),
 		downloadButton("downloadSimulationTable", "Download simulation table")
 	)
-)
+)	# end of ui
