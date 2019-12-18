@@ -591,7 +591,7 @@ shinyServer(function(input, output, session) {
 			simpson <- 1- sum(relabund^2)
 			data.frame(
 							Gamma_scale = "",
-							n_species= sum(abund >0),
+							n_species= length(abund),
 							shannon = round(shannon, 3),
 							# ens_shannon = round(exp(shannon), 3),
 							simpson = round(simpson, 3)
@@ -612,7 +612,7 @@ shinyServer(function(input, output, session) {
 			simpson <- 1- sum(relabund^2)
 			data.frame(
 							Gamma_scale = "",
-							n_species= sum(abund >0),
+							n_species= length(abund),
 							shannon = round(shannon, 3),
 							# ens_shannon = round(exp(shannon), 3),
 							simpson = round(simpson, 3)
@@ -1015,7 +1015,7 @@ shinyServer(function(input, output, session) {
 			simpson <- 1- sum(relabund^2)
 			data.frame(
 							Gamma = "",
-							n_species= sum(abund >0),
+							n_species= length(abund),
 							shannon = round(shannon, 3),
 							# ens_shannon = round(exp(shannon), 3),
 							simpson = round(simpson, 3)
@@ -1137,6 +1137,129 @@ shinyServer(function(input, output, session) {
 			hr()
 		)
 	})
+	## end of first step
+	
+	
+
+	## next steps
+	observeEvent(input$sbskeep_step, {
+		# ui ID
+		divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3"))
+		btnID <- paste0(divID, "rmv")
+		community_summary_id <- paste0(divID, "comm")
+		gamma_table_id <- paste0(divID, "gamm")
+		alpha_summary_table_id <- paste0(divID, "alph")
+		sampling_plot_ID <- paste0(divID, "samp")
+		distance_decay_plot_ID <- paste0(divID, "dist")
+		rarefaction_plot_ID <- paste0(divID, "rare")
+	
+		# only create button if there is none
+		if (is.null(sbsvalues[[divID]])) {
+      
+			insertUI(
+				selector = "#sbsfirst_step",
+				where="afterEnd",
+				ui = tags$div(id = divID,
+					fluidRow(
+						column(width=4,
+							tableOutput(community_summary_id),
+							tableOutput(gamma_table_id),
+							tableOutput(alpha_summary_table_id),
+							actionButton(btnID, "Remove this step", class = "pull-right btn btn-danger")
+						),
+						column(width=4,
+							plotOutput(sampling_plot_ID)
+						),
+						column(width=4,
+							switch(input$sbsplot_choice, 
+								"distance_decay_choice"    = plotOutput(distance_decay_plot_ID),
+								"rarefaction_curve_choice" = plotOutput(rarefaction_plot_ID)
+							)
+						)
+					)
+				)
+			)
+      
+      output[[community_summary_id]] <- renderTable({
+			isolate({
+				data.frame(Community = "",
+							n_species = length(levels(sbssim.com()$census$species)),
+							n_individuals = nrow(sbssim.com()$census))
+			})
+		})
+		
+      output[[gamma_table_id]] <- renderTable({
+			isolate({
+				abund <- apply(sbssampling_quadrats()$spec_dat, 2, sum)
+				abund <- abund[abund > 0]
+				relabund <- abund/sum(abund)
+				shannon <- - sum(relabund * log(relabund))
+				simpson <- 1- sum(relabund^2)
+				data.frame(
+								Gamma = "",
+								n_species= sum(abund >0),
+								shannon = round(shannon, 3),
+								# ens_shannon = round(exp(shannon), 3),
+								simpson = round(simpson, 3)
+								# ens_simpson = round(1/(1 - simpson), 3)
+				)
+			})
+		})      
+		
+		output[[alpha_summary_table_id]] <- renderTable({
+			isolate({
+				quadrats_coordinates <- sbssampling_quadrats()$xy_dat
+				temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
+					div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$sbsarea_of_quadrats), comm=sbssim.com())
+				}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
+				funs <- list(min=min, max=max, mean=mean, sd=sd)
+				data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
+			})
+		})
+		
+		output[[sampling_plot_ID]] <- renderPlot({
+			isolate({
+				quadrats_coordinates <- sbssampling_quadrats()$xy_dat
+				plot(sbssim.com(), main = "Community distribution")
+				graphics::rect(quadrats_coordinates$x,
+									quadrats_coordinates$y,
+									quadrats_coordinates$x + sqrt(input$sbsarea_of_quadrats),
+									quadrats_coordinates$y + sqrt(input$sbsarea_of_quadrats),
+									lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
+			})
+		})
+		
+		output[[distance_decay_plot_ID]] <- renderPlot({
+			isolate({
+				plot(dist_decay_quadrats(sbssampling_quadrats(), method = "bray", binary = F), ylim=c(0,1))
+			})
+		})
+		
+		output[[rarefaction_plot_ID]] <- renderPlot({
+			isolate({
+				plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y)
+				lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+				lapply(sbsrarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
+			})
+		})
+
+
+      # make a note of the ID of this section, so that it is not repeated accidentally
+      sbsvalues[[divID]] <- TRUE
+      
+      # create a listener on the newly-created button that will remove it from the app when clicked
+      observeEvent(input[[btnID]], {
+        removeUI(selector = paste0("#", divID))
+        
+        sbsvalues[[divID]] <- NULL
+        
+      }, ignoreInit = TRUE, once = TRUE)
+      
+      # otherwise, print a message to the console
+    } else {
+      message("The button has already been created!")
+    }
+  })
 
 }) # end of server()
 

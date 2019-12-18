@@ -175,7 +175,8 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 				),
 				actionButton("sbsnew_sampling_button", label="Restart sampling"),
 				# Next step
-				actionButton("sbskeep_step", label="Next step")
+				actionButton("sbskeep_step", label="Next step"),
+				selectizeInput(inputId="sbsplot_choice", "Plot type", choices = c("Distance decay"="distance_decay_choice", "Rarefaction curve"="rarefaction_curve_choice"))
 			),
 			mainPanel(
 			# plot of the community
