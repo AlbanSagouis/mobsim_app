@@ -159,6 +159,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 				helpText("Number of mother points per species OR number of individuals per cluster."),
 				textInput(inputId="sbsspatcoef",label="Integer values separated by commas", value="0"),
 				textInput(inputId="sbsspatagg", label="Spatial Aggregation (mean distance from mother points)", value = 0.1),
+				textInput("sbssimulation_seed", label="Simulation seed", value="Not specified"),
 
 				
 				# Restart action button
@@ -166,11 +167,15 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 				
 				# sampling parameters
 				fluidRow(
-					column(width=6,
+					column(width=4,
 						numericInput("sbsnumber_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)
 					),
-					column(width=6,
+					column(width=4,
 						numericInput("sbsarea_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005)
+					),
+					column(width=4,
+						# numericInput("sbssampling_seed", label="Sampling seed", value=NULL, min=1, max=2^15, step=1)
+						textInput("sbssampling_seed", label="Sampling seed", value="Not specified")
 					)
 				),
 				actionButton("sbsnew_sampling_button", label="Restart sampling"),

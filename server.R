@@ -25,7 +25,7 @@ shinyServer(function(input, output, session) {
 
 	values <- reactiveValues()
 
-	# Big table
+	# Big table tab
 	
 	session$userData$sim_ID <- 1
 	values$bigtable <- empty_bigtable()
@@ -45,7 +45,7 @@ shinyServer(function(input, output, session) {
 				seed_simulation = seed_simulation(),
 				n_quadrats = NA,
 				quadrat_area =NA,
-				seed_sampling = NA,
+				seed_sampling = seed_sampling(),
 				gamma_richness = NA,
 				gamma_shannon = NA,
 				gamma_simpson = NA,
@@ -149,7 +149,7 @@ shinyServer(function(input, output, session) {
 	output$bigtable_selected_simulations <- renderPrint(paste(values$bigtable[as.numeric(input$bigtable_output_rows_selected), "sim_ID"], collapse=", "))
 	
 	#########################################################################################################
-	# SIMULATION
+	# SIMULATION TAB
   
   # update range for species richness, an observed species has minimum one individual
 	observe({
@@ -188,11 +188,14 @@ shinyServer(function(input, output, session) {
 		}			
 	})
 	
+	## seed simulation
 	seed_simulation <- reactive({
 		input$Restart
 		input$sbsRestart
 		
-		sample(1:2^15, 1)
+		isolate({
+			if(input$sbssimulation_seed == "Not specified")	sample(1:2^15, 1) else as.numeric(input$sbssimulation_seed)
+		})
 	})
 	
 	seed_sampling <- reactive({
@@ -201,7 +204,9 @@ shinyServer(function(input, output, session) {
 		input$sbsRestart
 		input$sbsnew_sampling_button
 		
-		sample(1:2^15, 1)
+		isolate({
+			if(input$sbssampling_seed == "Not specified")	sample(1:2^15, 1) else as.numeric(input$sbssampling_seed)
+		})
 	})
 
 	##		random_mother_points
@@ -492,7 +497,7 @@ shinyServer(function(input, output, session) {
 	
 	
 	######################################################################################################################################################
-	# Sampling
+	# Sampling tab
 	# Sampling
 	## Community summary
 	output$community_summary_table <- renderTable({
@@ -918,7 +923,7 @@ shinyServer(function(input, output, session) {
 	
 	
 	###############################################################################################
-	# STEP BY STEP
+	# STEP BY STEP TAB
 	sbsvalues <- reactiveValues()
 	
 	## Parameters
