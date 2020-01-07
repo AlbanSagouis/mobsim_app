@@ -160,7 +160,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 				textInput(inputId="sbsspatcoef",label="Integer values separated by commas", value="0"),
 				textInput(inputId="sbsspatagg", label="Spatial Aggregation (mean distance from mother points)", value = 0.1),
 				textInput("sbssimulation_seed", label="Simulation seed", value="Not specified"),
-
+				# verbatimTextOutput("debugging_seed"),
 				
 				# Restart action button
 				actionButton(inputId="sbsRestart",label="Restart Simulation"),

@@ -209,6 +209,9 @@ shinyServer(function(input, output, session) {
 		})
 	})
 
+	# debugging
+	output$debugging_seed <- renderText(paste0("input = ", input$sbssimulation_seed, ", reactive = ", seed_simulation()))
+
 	##		random_mother_points
 
 	output$spatdist <- renderUI({
@@ -1137,7 +1140,10 @@ shinyServer(function(input, output, session) {
 				plotOutput("sbssampling_plot")
 			),
 			column(width=4,
-				plotOutput("sbsrarefaction_curves_plot")
+				switch(input$sbsplot_choice, 
+					"distance_decay_choice"    = plotOutput("sbsdistance_decay_plot"),
+					"rarefaction_curve_choice" = plotOutput("sbsrarefaction_curves_plot")
+				)
 			),
 			hr()
 		)
