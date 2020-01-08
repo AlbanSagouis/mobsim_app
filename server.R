@@ -373,6 +373,14 @@ shinyServer(function(input, output, session) {
 	})
 	
 	observeEvent(input$plot_brush, {
+		updateSelectInput(session,
+			inputId = "species_ID",
+			# choices = paste("species", 1:input$S, sep="_"),
+			selected= paste("species", as.numeric(gsub(x=input$species_ID, pattern="species_", replacement="\\2"))+1, sep="_")
+		)
+	})
+	
+	observeEvent(input$plot_brush, {
 		add_row = data.frame(species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")),
 									xmin = input$plot_brush$xmin,
 									xmax = input$plot_brush$xmax,
