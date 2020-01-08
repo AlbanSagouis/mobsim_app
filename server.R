@@ -305,9 +305,8 @@ shinyServer(function(input, output, session) {
 			values$DT = rem_row
 		}
 		if (input$method_type == "click_for_species_ranges")	{
-			rem_row = values$DT_species_ranges[-nrow(values$DT_species_ranges), ]
-			values$DT_species_ranges = rem_row
-		}	
+			values$DT_species_ranges <- values$DT_species_ranges[-as.numeric(input$datatable_species_ranges_rows_selected), ]
+		}
 	})
 
 	### showing coordinates in a text box
@@ -356,26 +355,26 @@ shinyServer(function(input, output, session) {
 	values$DT_species_ranges <- data.frame(xmin = numeric(), xmax = numeric(),
 							 ymin = numeric(),  ymax = numeric(),
 							 species_ID = factor())
+
 								
-	brush <- NULL
-	makeReactiveBinding("brush")
-	observeEvent(input$plot_brush, {
-		brush <<- input$plot_brush
-	})
+	# brush <- NULL
+	# makeReactiveBinding("brush")
+	# observeEvent(input$plot_brush, {
+		# brush <<- input$plot_brush
+	# })
 
-	observeEvent(input$species_ID, {
-		session$resetBrush("plot_brush")
-	})
+	# observeEvent(input$species_ID, {
+		# session$resetBrush("plot_brush")
+	# })
 
-	observeEvent(input$resetPlot, {
-		session$resetBrush("plot_brush")
-		brush <<- NULL
-	})
-	
+	# observeEvent(input$resetPlot, {
+		# session$resetBrush("plot_brush")
+		# brush <<- NULL
+	# })
+	### changing species_ID after each brushing event
 	observeEvent(input$plot_brush, {
 		updateSelectInput(session,
 			inputId = "species_ID",
-			# choices = paste("species", 1:input$S, sep="_"),
 			selected= paste("species", as.numeric(gsub(x=input$species_ID, pattern="species_", replacement="\\2"))+1, sep="_")
 		)
 	})
@@ -390,12 +389,16 @@ shinyServer(function(input, output, session) {
 		values$DT_species_ranges = rbind(values$DT_species_ranges, add_row)
 	})
 	
+
 	### showing coordinates in a table
-	output$datatable_species_ranges <- renderTable({
+	output$datatable_species_ranges <- renderDataTable({
 	if (!input$method_type %in% c("click_for_species_ranges"))	{
 			return()
 		} else {
-			values$DT_species_ranges
+			DT_species_ranges_rounded <- values$DT_species_ranges
+			DT_species_ranges_rounded[,colnames(values$DT_species_ranges) != "species_ID"] <- round(values$DT_species_ranges[, colnames(values$DT_species_ranges) != "species_ID"], 2)
+			
+			DT::datatable(DT_species_ranges_rounded, options = list(searching=FALSE, pageLength=15))
 		}
 	})
 

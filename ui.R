@@ -50,8 +50,8 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 					plotOutput(outputId="on_plot_selection",
 						click = "plot_click",
 						brush = brushOpts(id="plot_brush", resetOnNew=TRUE)
-					),
-					fluidRow(align="center", actionButton(inputId="resetPlot", label="Clear plot"))
+					)
+					# fluidRow(align="center", actionButton(inputId="resetPlot", label="Clear plot"))
 						# column(width=6, actionButton(inputId="resetBrush", label="Reset brush"))
 					# uiOutput("info")
 				),
@@ -59,7 +59,7 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				column(width=3,
 					div(style = 'height:50vh; overflow-y: scroll',
 						tableOutput("datatable"),
-						tableOutput("datatable_species_ranges")
+						dataTableOutput("datatable_species_ranges")
 					),
 					fluidRow(
 						column(offset=1, width=5, uiOutput("rem_point_button")),
