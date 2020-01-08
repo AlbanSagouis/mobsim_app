@@ -14,7 +14,7 @@ library(DT)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
+navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	tabPanel("MOBsim", 
 
@@ -26,9 +26,9 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 									min=10, max=5000, value=1000, step=10, ticks=F),
 					
 					sliderInput("S", "Species Richness",
-									min=5, max=500, value=40, step=5, ticks=F),
+									min=5, max=500, value=5, step=5, ticks=F),
 					
-					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
+					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "Click for species ranges"="click_for_species_ranges", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
 					
 					# checkboxInput("sample_setting_button", "Sample setting", value=FALSE)
 				),
@@ -47,19 +47,23 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 				
 				column(width=3,
 					uiOutput("species_ID_input"),
-					plotOutput("on_plot_selection",
+					plotOutput(outputId="on_plot_selection",
 						click = "plot_click",
-						brush = "plot_brush"
+						brush = brushOpts(id="plot_brush", resetOnNew=TRUE)
 					),
-					column(offset=1, width=5, uiOutput("rem_point_button")),
-					column(width=6, uiOutput("rem_all_points_button"))
-					
+					fluidRow(align="center", actionButton(inputId="resetPlot", label="Clear plot"))
+						# column(width=6, actionButton(inputId="resetBrush", label="Reset brush"))
 					# uiOutput("info")
 				),
 				
 				column(width=3,
 					div(style = 'height:50vh; overflow-y: scroll',
-						tableOutput("datatable")
+						tableOutput("datatable"),
+						tableOutput("datatable_species_ranges")
+					),
+					fluidRow(
+						column(offset=1, width=5, uiOutput("rem_point_button")),
+						column(width=6, uiOutput("rem_all_points_button"))
 					),
 					verbatimTextOutput("simcomsummary", placeholder=FALSE),
 					tags$style(type = 'text/css', '#simcomsummary {font-size: 10px;}')	# font-family: calibri light; background-color: rgba(255,255,255,0.40); color: black; border-style: none;}')

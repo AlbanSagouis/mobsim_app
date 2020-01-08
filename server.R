@@ -153,7 +153,7 @@ shinyServer(function(input, output, session) {
   
   # update range for species richness, an observed species has minimum one individual
 	observe({
-		updateSliderInput(session, "S", min=5, max=input$N, value=40, step=5)
+		updateSliderInput(session, "S", min=5, max=input$N, value=5, step=5)
 	})
   # update the number of species in the drop down species list.
 	observe({
@@ -171,7 +171,7 @@ shinyServer(function(input, output, session) {
 						
 	  
 	output$CVslider <- renderUI({
-		if (!input$method_type %in% c("random_mother_points","click_for_mother_points") | is.null(input$sad_type))	
+		if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges") | is.null(input$sad_type))	
 			return()
 		switch(input$sad_type,
 			"lnorm"=sliderInput("coef", label="CV(abundance), i.e. standard deviation of abundances divided by the mean abundance",value=1, min=0, max=5, step=0.1, ticks=F),
@@ -181,7 +181,7 @@ shinyServer(function(input, output, session) {
 	})
 
 	output$text_spat_agg <- renderUI({
-		if (!input$method_type %in% c("random_mother_points","click_for_mother_points"))	{
+		if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
 			textInput(inputId="spatagg", label="Spatial Aggregation (mean distance from mother points)", value = 0.1)
@@ -215,7 +215,7 @@ shinyServer(function(input, output, session) {
 	##		random_mother_points
 
 	output$spatdist <- renderUI({
-		if (input$method_type != "random_mother_points")	{
+		if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
 			selectizeInput(inputId="spatdist", "Cluster parameter", choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"))
@@ -223,7 +223,7 @@ shinyServer(function(input, output, session) {
 	})
 
 	output$spatcoef <- renderUI({
-		if (input$method_type != "random_mother_points")	{
+		if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
 			textInput(inputId="spatcoef",label="Integer values separated by commas", value="0")
@@ -236,7 +236,7 @@ shinyServer(function(input, output, session) {
 
 
 	output$species_ID_input <- renderUI({
-		if (input$method_type != "click_for_mother_points")	{
+		if (!input$method_type %in% c("click_for_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
 			selectInput("species_ID", "Pick species ID", paste("species", 1:input$S, sep="_"))
@@ -251,7 +251,7 @@ shinyServer(function(input, output, session) {
 	  if (is.null(input$method_type)) {
 			return()
 		} else {
-			if(input$method_type=="click_for_mother_points") {
+			if(input$method_type %in% c("click_for_mother_points","click_for_species_ranges")) {
 					color_vector <- rainbow(input$S)
 					par(mex=0.6, mar=c(3,3,0,0), cex.axis=0.8)
 					plot(x=values$DT$x, y=values$DT$y, col=color_vector[values$DT$species_ID], xlim=c(0,1), ylim=c(0,1), xlab="", ylab="", las=1, asp=1, pch=20)
@@ -262,7 +262,7 @@ shinyServer(function(input, output, session) {
 
 
 	output$rem_point_button <- renderUI({
-		if (input$method_type != "click_for_mother_points")	{
+		if (!input$method_type %in% c("click_for_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
 			actionButton("rem_point", "Remove Last Point")
@@ -270,7 +270,7 @@ shinyServer(function(input, output, session) {
 	})
 
 	output$rem_all_points_button <- renderUI({
-		if (input$method_type != "click_for_mother_points")	{
+		if (!input$method_type %in% c("click_for_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
 			actionButton("rem_all_points", "Remove All Points")
@@ -289,13 +289,25 @@ shinyServer(function(input, output, session) {
 	})
 
 	observeEvent(input$rem_all_points, {
-		rem_row = values$DT[-(1:nrow(values$DT)), ]
-		values$DT = rem_row
+		if (input$method_type == "click_for_mother_points")	{
+			rem_row = values$DT[-(1:nrow(values$DT)), ]
+			values$DT = rem_row
+		}
+		if (input$method_type == "click_for_species_ranges")	{
+			rem_row = values$DT_species_ranges[-(1:nrow(values$DT_species_ranges)), ]
+			values$DT_species_ranges = rem_row
+		}
 	})
 		 
 	observeEvent(input$rem_point, {
-		rem_row = values$DT[-nrow(values$DT), ]
-		values$DT = rem_row
+		if (input$method_type == "click_for_mother_points")	{
+			rem_row = values$DT[-nrow(values$DT), ]
+			values$DT = rem_row
+		}
+		if (input$method_type == "click_for_species_ranges")	{
+			rem_row = values$DT_species_ranges[-nrow(values$DT_species_ranges), ]
+			values$DT_species_ranges = rem_row
+		}	
 	})
 
 	### showing coordinates in a text box
@@ -322,7 +334,7 @@ shinyServer(function(input, output, session) {
 
 	### showing coordinates in a table
 	output$datatable <- renderTable({
-	if (input$method_type != "click_for_mother_points")	{
+	if (!input$method_type %in% c("click_for_mother_points"))	{
 			return()
 		} else {
 			values$DT
@@ -336,6 +348,53 @@ shinyServer(function(input, output, session) {
 			summary(session$userData$sim.com, digits=2)
 		})
 	})
+
+
+	##		click_for_species_ranges
+
+	### storing coordinates
+	values$DT_species_ranges <- data.frame(xmin = numeric(), xmax = numeric(),
+							 ymin = numeric(),  ymax = numeric(),
+							 species_ID = factor())
+								
+	brush <- NULL
+	makeReactiveBinding("brush")
+	observeEvent(input$plot_brush, {
+		brush <<- input$plot_brush
+	})
+
+	observeEvent(input$species_ID, {
+		session$resetBrush("plot_brush")
+	})
+
+	observeEvent(input$resetPlot, {
+		session$resetBrush("plot_brush")
+		brush <<- NULL
+	})
+	
+	observeEvent(input$plot_brush, {
+		add_row = data.frame(species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")),
+									xmin = input$plot_brush$xmin,
+									xmax = input$plot_brush$xmax,
+									ymin = input$plot_brush$ymin,
+									ymax = input$plot_brush$ymax
+								 )
+		values$DT_species_ranges = rbind(values$DT_species_ranges, add_row)
+	})
+	
+	### showing coordinates in a table
+	output$datatable_species_ranges <- renderTable({
+	if (!input$method_type %in% c("click_for_species_ranges"))	{
+			return()
+		} else {
+			values$DT_species_ranges
+		}
+	})
+
+
+
+
+
 
 
 	##		uploading_community_data
@@ -395,14 +454,24 @@ shinyServer(function(input, output, session) {
 			if(input$spatdist=="n.cluster") n.cluster <- spatcoef_num else n.cluster <- NA
 			
 			simulation_parameters <- switch(input$method_type,
-									"random_mother_points"=list(mother_points=n.mother,
-																		cluster_points=n.cluster,
-																		xmother=NA,
-																		ymother=NA),
-									"click_for_mother_points"=list(mother_points=NA,
-																		cluster_points=NA,
-																		xmother=tapply(values$DT$x, values$DT$species_ID, list),
-																		ymother=tapply(values$DT$y, values$DT$species_ID, list))
+									"random_mother_points" = list(mother_points = n.mother,
+																		cluster_points = n.cluster,
+																		xmother = NA,
+																		ymother = NA,
+																		xrange = c(0,1),
+																		yrange = c(0,1)),
+									"click_for_mother_points" = list(mother_points = NA,
+																		cluster_points = NA,
+																		xmother = tapply(values$DT$x, values$DT$species_ID, list),
+																		ymother = tapply(values$DT$y, values$DT$species_ID, list),
+																		xrange = c(0,1),
+																		yrange = c(0,1)),
+									"click_for_species_ranges" = list(mother_points = n.mother,
+																		cluster_points = n.cluster,
+																		xmother = NA,
+																		ymother = NA,
+																		xrange = data.frame(values$DT_species_ranges$xmin, values$DT_species_ranges$xmax),
+																		yrange = data.frame(values$DT_species_ranges$ymin, values$DT_species_ranges$ymax))
 									)
 									
 
@@ -412,15 +481,18 @@ shinyServer(function(input, output, session) {
 							"lnorm"=sim_thomas_community(s_pool = input$S, n_sim = input$N, 
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sad_type, sad_coef=list(cv_abund=input$coef),
-								fix_s_sim = T, seed = seed_simulation()),
+								fix_s_sim = T, seed = seed_simulation(),
+								xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
 							"geom"=sim_thomas_community(s_pool = input$S, n_sim = input$N,
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sad_type, sad_coef=list(prob=input$coef),
-								fix_s_sim = T, seed = seed_simulation()),
+								fix_s_sim = T, seed = seed_simulation(),
+								xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
 							"ls"=sim_thomas_community(s_pool = input$S, n_sim = input$N,
 								sad_type = input$sad_type, sad_coef=list(N=input$N,alpha=as.numeric(input$coef)),
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
-								fix_s_sim = T, seed = seed_simulation())
+								fix_s_sim = T, seed = seed_simulation(),
+								xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
 						)
 		} else {
 			session$userData$sim.com <- get(load(input$loaded_file$datapath))
