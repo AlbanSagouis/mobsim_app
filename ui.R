@@ -14,7 +14,7 @@ library(DT)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
+navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	tabPanel("MOBsim", 
 
@@ -197,9 +197,25 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 	tabPanel("Big Table",
 		dataTableOutput("bigtable_output"),
 		verbatimTextOutput("bigtable_selected_simulations"),
-		actionButton("rem_all_simulations", "Remove all simulations"),
-		actionButton("rem_selected_simulations", "Remove selected simulations"),
-		downloadButton("downloadSimulationTable", "Download simulation table"),
-		downloadButton("downloadSimulationList", "Download simulation data")
+		fluidRow(
+			column(width=4,
+				fluidRow(align="center", actionButton("rem_all_simulations", "Remove all simulations")),
+				fluidRow(align="center", actionButton("rem_selected_simulations", "Remove selected simulations"))
+			),
+			column(width=4,
+				fluidRow(align="center", downloadButton("downloadSimulationTable", "Download simulation table")),
+				fluidRow(align="center", downloadButton("downloadSimulationList", "Download simulation data"))
+			),
+			column(width=4,
+				checkboxGroupInput(inputId="comppllot_types", label="Plot types", choices=c("Community map", "Distance decay", "Rarefaction curve"), selected="Rarefaction curve")
+			)
+		),
+		# actionButton("compare_selected_simulations","Compare selected simulations"),
+		# verbatimTextOutput("debugging_simulation_table"),
+		plotOutput("comp_plot"),
+		hr()
 	)
+	# tabPanel("Comparison",
+		# tableOutput("simtab_output"),
+	# )
 )	# end of ui

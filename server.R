@@ -1366,13 +1366,46 @@ shinyServer(function(input, output, session) {
 
 	# COMPARISON TAB
 	
-	simtab <- reactive({
-		input$compare_selected_simulations
-		
-		data.frame(input$bigtable)[input$bigtable_output_rows_selected, ]
+	simtab <- reactive({		
+		as.data.frame(values$bigtable[input$bigtable_output_rows_selected, ])
 	})
 	
+	output$simtab_output <- renderTable(simtab())
 	
+	nplot <- reactive(length(input$comppllot_types))
+	output$comp_plot <- renderPlot({
+		if(is.null(input$bigtable_output_rows_selected)) {
+			return()
+		} else {
+			nsim <- nrow(simtab())
+			simlist <- values$saved_simulations[as.character(simtab()$sim_ID)]
+			
+			
+			par(mfcol = c(nplot(), nsim), mex=.6, mar=c(2.5,3,3,3))
+			lapply(simlist, function(sim) {
+				if("Community map" %in% input$comppllot_types) {
+					plot(sim$community, main= paste0("sim ID ", sim$sim_ID))	# Plotting the community
+					graphics::rect(sim$sampled_quadrats$xy_dat$x,	# Plotting quadrats
+										sim$sampled_quadrats$xy_dat$y,
+										sim$sampled_quadrats$xy_dat$x + sqrt(sim$quadrats_area),
+										sim$sampled_quadrats$xy_dat$y + sqrt(sim$quadrats_area),
+										lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
+				}
+				if("Rarefaction curve" %in% input$comppllot_types) {
+					plot(spec_sample_curve(sim$community, method="rarefaction"))	# Plotting rarefaction curves
+					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
+				}
+				if("Distance decay" %in% input$comppllot_types) {
+					plot(dist_decay_quadrats(sim$sampled_quadrats, method = "bray", binary = F), ylim=c(0,1))	# Plotting distance decay
+				}
+			})
+		}
+	})	#, width="auto", height=function(){500*nplot()})
+	
+	output$debugging_simulation_table <- renderText({
+		paste("class selected: ", class(input$bigtable_output_rows_selected), ", length selected: ", length(input$bigtable_output_rows_selected), ", class bigtable: ", class(values$bigtable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$comppllot_types)
+	})
 
 #######################################################################################################################
 
@@ -1395,7 +1428,9 @@ shinyServer(function(input, output, session) {
 			values$saved_simulations$templist <- list(
 									sim_ID = session$userData$sim_ID,
 									community = session$userData$sim.com,
-									sampled_quadrats = sampling_quadrats()
+									quadrats_area = input$area_of_quadrats,
+									sampled_quadrats = sampling_quadrats(),
+									rarefaction_curve_list = rarefaction_curves_list()
 								)
 			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
 		})
@@ -1406,7 +1441,9 @@ shinyServer(function(input, output, session) {
 			values$saved_simulations$templist <- list(
 									sim_ID = session$userData$sim_ID,
 									community = sbssim.com(),
-									sampled_quadrats = sbssampling_quadrats()
+									quadrats_area = input$area_of_quadrats,
+									sampled_quadrats = sbssampling_quadrats(),
+									rarefaction_curve_list = sbsrarefaction_curves_list()
 								)
 			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
 		})
@@ -1417,7 +1454,9 @@ shinyServer(function(input, output, session) {
 			values$saved_simulations$templist <- list(
 									sim_ID = session$userData$sim_ID,
 									community = sbssim.com(),
-									sampled_quadrats = sbssampling_quadrats()
+									quadrats_area = input$area_of_quadrats,
+									sampled_quadrats = sbssampling_quadrats(),
+									rarefaction_curve_list = sbsrarefaction_curves_list()
 								)
 			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
 		})
