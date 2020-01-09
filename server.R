@@ -14,7 +14,7 @@ library(mobsim, lib.loc="./Library")
 # library(ggplot2)
 # library(markdown)
 
-bigtable_names <- c('sim_ID','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
+bigtable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
 	 'gamma_richness','gamma_shannon','gamma_simpson',
 	 'alpha_mean_richness','alpha_mean_shannon','alpha_mean_simpson'
 )
@@ -40,12 +40,13 @@ shinyServer(function(input, output, session) {
 			session$userData$sim_ID <- session$userData$sim_ID + 1
 			values$bigtable <- rbind(values$bigtable, c(
 				sim_ID = session$userData$sim_ID,
+				method = input$method_type,
 				n_species = input$S,
 				n_individuals = input$N,
 				seed_simulation = seed_simulation(),
 				n_quadrats = NA,
 				quadrat_area =NA,
-				seed_sampling = seed_sampling(),
+				seed_sampling = NA,
 				gamma_richness = NA,
 				gamma_shannon = NA,
 				gamma_simpson = NA,
@@ -63,6 +64,7 @@ shinyServer(function(input, output, session) {
 			session$userData$sim_ID <- session$userData$sim_ID + 1
 			values$bigtable <- rbind(values$bigtable, c(
 				sim_ID = session$userData$sim_ID,
+				method = input$method_type,
 				n_species = input$S,
 				n_individuals = input$N,
 				seed_simulation = seed_simulation(),
@@ -88,6 +90,7 @@ shinyServer(function(input, output, session) {
 			session$userData$sim_ID <- session$userData$sim_ID + 1
 			values$bigtable <- rbind(values$bigtable, c(
 				sim_ID = session$userData$sim_ID,
+				method = "random_mother_points",
 				n_species = input$sbsS,
 				n_individuals = input$sbsN,
 				seed_simulation = seed_simulation(),
@@ -111,6 +114,7 @@ shinyServer(function(input, output, session) {
 			session$userData$sim_ID <- session$userData$sim_ID + 1
 			values$bigtable <- rbind(values$bigtable, c(
 				sim_ID = session$userData$sim_ID,
+				method = "random_mother_points",
 				n_species = input$sbsS,
 				n_individuals = input$sbsN,
 				seed_simulation = seed_simulation(),
@@ -145,8 +149,15 @@ shinyServer(function(input, output, session) {
 		}
 	)
 	
-	output$bigtable_output <- renderDataTable(values$bigtable)
+	## render bigtable
+	output$bigtable_output <- renderDataTable(
+		DT::datatable(values$bigtable, options = list(searching=FALSE, pageLength=20))
+	)
 	output$bigtable_selected_simulations <- renderPrint(paste(values$bigtable[as.numeric(input$bigtable_output_rows_selected), "sim_ID"], collapse=", "))
+	
+	
+
+	
 	
 	#########################################################################################################
 	# SIMULATION TAB
@@ -396,7 +407,7 @@ shinyServer(function(input, output, session) {
 			return()
 		} else {
 			DT_species_ranges_rounded <- values$DT_species_ranges
-			DT_species_ranges_rounded[,colnames(values$DT_species_ranges) != "species_ID"] <- round(values$DT_species_ranges[, colnames(values$DT_species_ranges) != "species_ID"], 2)
+			DT_species_ranges_rounded[,colnames(DT_species_ranges_rounded) != "species_ID"] <- round(values$DT_species_ranges[, colnames(values$DT_species_ranges) != "species_ID"], 2)
 			
 			DT::datatable(DT_species_ranges_rounded, options = list(searching=FALSE, pageLength=15))
 		}
@@ -1171,14 +1182,6 @@ shinyServer(function(input, output, session) {
 		})
 	})
 	
-	#### Saving
-	sbsvalues$rarefaction_curve_counter <- 1
-	# sbsvalues
-	# sbsrarefaction_curves_previous <- reactiveValues({
-		# input$sbskeep_step
-		
-		
-			
 	
 	#### Plotting
 	sbsvalues$ranges <- c(x = NULL, y = NULL)		# used to zoom in the plot
@@ -1197,7 +1200,7 @@ shinyServer(function(input, output, session) {
 			# for (site in names(sbsrarefaction_curves_list())) {		# verification aid
 				# temp=sbsrarefaction_curves_list()[[site]]
 				# text(gsub(site, pattern="site", replacement=""), x=10, y=temp[10])
-			# }			
+			# }
 		})
 		
 		# if(!is.null(input$sampling_plot_click)) {	# highlight
@@ -1354,6 +1357,90 @@ shinyServer(function(input, output, session) {
       message("The button has already been created!")
     }
   })
+  
+  
+  
+  
+
+######################################################################################################################
+
+	# COMPARISON TAB
+	
+	simtab <- reactive({
+		input$compare_selected_simulations
+		
+		data.frame(input$bigtable)[input$bigtable_output_rows_selected, ]
+	})
+	
+	
+
+#######################################################################################################################
+
+	# SAVING ALL SIMULATIONS
+	
+	values$saved_simulations <- list()
+	
+	observeEvent(input$Restart, {	# save mother point coordinates and ranges?
+		isolate({
+			values$saved_simulations$templist <- list(
+									sim_ID = session$userData$sim_ID,
+									community = session$userData$sim.com
+								)
+			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
+		})
+	})
+	
+	observeEvent(input$new_sampling_button, {
+		isolate({
+			values$saved_simulations$templist <- list(
+									sim_ID = session$userData$sim_ID,
+									community = session$userData$sim.com,
+									sampled_quadrats = sampling_quadrats()
+								)
+			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
+		})
+	})	
+
+	observeEvent(input$sbsRestart, {
+		isolate({
+			values$saved_simulations$templist <- list(
+									sim_ID = session$userData$sim_ID,
+									community = sbssim.com(),
+									sampled_quadrats = sbssampling_quadrats()
+								)
+			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
+		})
+	})
+	
+	observeEvent(input$sbsnew_sampling_button, {
+		isolate({
+			values$saved_simulations$templist <- list(
+									sim_ID = session$userData$sim_ID,
+									community = sbssim.com(),
+									sampled_quadrats = sbssampling_quadrats()
+								)
+			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
+		})
+	})	
+	
+	# Download simulation data list
+	output$downloadSimulationList <- downloadHandler(
+		filename = function() {paste("Simulation_list.rds", sep="")},
+		content  = function(fname) {
+			saveRDS(values$saved_simulations, file = fname)
+		}
+	)
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 }) # end of server()
 

@@ -199,6 +199,7 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 		verbatimTextOutput("bigtable_selected_simulations"),
 		actionButton("rem_all_simulations", "Remove all simulations"),
 		actionButton("rem_selected_simulations", "Remove selected simulations"),
-		downloadButton("downloadSimulationTable", "Download simulation table")
+		downloadButton("downloadSimulationTable", "Download simulation table"),
+		downloadButton("downloadSimulationList", "Download simulation data")
 	)
 )	# end of ui
