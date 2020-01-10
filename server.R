@@ -13,6 +13,7 @@ library(shiny)
 library(mobsim, lib.loc="./Library")
 # library(ggplot2)
 # library(markdown)
+library(RColorBrewer)
 
 bigtable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
 	 'gamma_richness','gamma_shannon','gamma_simpson',
@@ -1376,7 +1377,7 @@ shinyServer(function(input, output, session) {
 	nsim <- reactive(nrow(simtab()))
 	
 	output$comp_plot <- renderPlot({
-		if(is.null(input$bigtable_output_rows_selected) | is.null(nsim()) | is.null(nplot()) {
+		if(is.null(input$bigtable_output_rows_selected)) {
 			return()
 		} else {
 			simlist <- values$saved_simulations[as.character(simtab()$sim_ID)]
@@ -1402,23 +1403,27 @@ shinyServer(function(input, output, session) {
 					}
 				})
 			}
+			
 			if(input$compplot_style == "Stacked")	{
 				community_x_limits <- range(sapply(simlist, function(sim) sim$community$x_min_max))
 				community_y_limits <- range(sapply(simlist, function(sim) sim$community$y_min_max))
-				colorList <- rainbow(nsim())
+				colorList <- if(nsim() < 3) {rainbow(nsim())} else {
+					if(nsim() <= 12) brewer.pal(nsim(), "Paired") else  rainbow(nsim())}# replace with rcolorbrewer palette 'Paired' when 3>=nsim<=12
 				names(colorList) <- as.character(simtab()$sim_ID)
 				
 				plot(x=NA, y=NA, type="n",
-					xlim=c(0, max(as.numeric(simtab()$n_individuals))), ylim=c(0, max(as.numeric(simtab()$n_species))),
+					# xlim=c(0, max(as.numeric(simtab()$n_individuals))),
+					xlim=c(0, max(sapply(simlist, function(sim) sum(sim$sampled_quadrats$spec_dat)))),
+					ylim=c(0, max(as.numeric(simtab()$n_species))),
 					xlab="Number of sampled individuals", ylab="Number of species")
 				lapply(simlist, function(sim)	{	# gamma scale
-					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col=colorList[sim$sim_ID])
-					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor(colorList[sim$sim_ID], alpha=0.5))	# alpha scale curves
+					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species > 0))), lwd=3, col=colorList[as.character(sim$sim_ID)])
+					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor(colorList[as.character(sim$sim_ID)], alpha=0.5))	# alpha scale curves
 				})
-				legend("bottomright", legend=names(colorList), col=colorList, bty="n")
+				legend("topleft", legend=names(colorList), col=colorList, bty="n", pch=16)
 			}
 		}
-	}	, width=function(){300*nsim()}, height=function(){350*nplot()})
+	})#, width=ifelse(is.null(nsim()), NA, function(){300*nsim()}), height=ifelse(is.null(nplot()), NA, function(){350*nplot()}))
 	
 	output$debugging_simulation_table <- renderText({
 		# paste("class selected: ", class(input$bigtable_output_rows_selected), ", length selected: ", length(input$bigtable_output_rows_selected), ", class bigtable: ", class(values$bigtable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$comppllot_types)
