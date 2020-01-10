@@ -1367,44 +1367,62 @@ shinyServer(function(input, output, session) {
 	# COMPARISON TAB
 	
 	simtab <- reactive({		
-		as.data.frame(values$bigtable[input$bigtable_output_rows_selected, ])
+		as.data.frame(values$bigtable[input$bigtable_output_rows_selected, ], stringsAsFactors=FALSE)
 	})
 	
 	output$simtab_output <- renderTable(simtab())
 	
 	nplot <- reactive(length(input$comppllot_types))
+	nsim <- reactive(nrow(simtab()))
+	
 	output$comp_plot <- renderPlot({
-		if(is.null(input$bigtable_output_rows_selected)) {
+		if(is.null(input$bigtable_output_rows_selected) | is.null(nsim()) | is.null(nplot()) {
 			return()
 		} else {
-			nsim <- nrow(simtab())
 			simlist <- values$saved_simulations[as.character(simtab()$sim_ID)]
 			
-			
-			par(mfcol = c(nplot(), nsim), mex=.6, mar=c(2.5,3,3,3))
-			lapply(simlist, function(sim) {
-				if("Community map" %in% input$comppllot_types) {
-					plot(sim$community, main= paste0("sim ID ", sim$sim_ID))	# Plotting the community
-					graphics::rect(sim$sampled_quadrats$xy_dat$x,	# Plotting quadrats
-										sim$sampled_quadrats$xy_dat$y,
-										sim$sampled_quadrats$xy_dat$x + sqrt(sim$quadrats_area),
-										sim$sampled_quadrats$xy_dat$y + sqrt(sim$quadrats_area),
-										lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
-				}
-				if("Rarefaction curve" %in% input$comppllot_types) {
-					plot(spec_sample_curve(sim$community, method="rarefaction"))	# Plotting rarefaction curves
-					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
-					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
-				}
-				if("Distance decay" %in% input$comppllot_types) {
-					plot(dist_decay_quadrats(sim$sampled_quadrats, method = "bray", binary = F), ylim=c(0,1))	# Plotting distance decay
-				}
-			})
+			if(input$compplot_style == "Split")	{
+				par(mfcol = c(nplot(), nsim()), mex=.6, mar=c(2.5,3,3,3))
+				lapply(simlist, function(sim) {
+					if("Community map" %in% input$comppllot_types) {
+						plot(sim$community, main= paste0("sim ID ", sim$sim_ID))	# Plotting the community
+						graphics::rect(sim$sampled_quadrats$xy_dat$x,	# Plotting quadrats
+											sim$sampled_quadrats$xy_dat$y,
+											sim$sampled_quadrats$xy_dat$x + sqrt(sim$quadrats_area),
+											sim$sampled_quadrats$xy_dat$y + sqrt(sim$quadrats_area),
+											lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
+					}
+					if("Rarefaction curve" %in% input$comppllot_types) {
+						plot(spec_sample_curve(sim$community, method="rarefaction"))	# Plotting rarefaction curves
+						lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+						lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
+					}
+					if("Distance decay" %in% input$comppllot_types) {
+						plot(dist_decay_quadrats(sim$sampled_quadrats, method = "bray", binary = F), ylim=c(0,1))	# Plotting distance decay
+					}
+				})
+			}
+			if(input$compplot_style == "Stacked")	{
+				community_x_limits <- range(sapply(simlist, function(sim) sim$community$x_min_max))
+				community_y_limits <- range(sapply(simlist, function(sim) sim$community$y_min_max))
+				colorList <- rainbow(nsim())
+				names(colorList) <- as.character(simtab()$sim_ID)
+				
+				plot(x=NA, y=NA, type="n",
+					xlim=c(0, max(as.numeric(simtab()$n_individuals))), ylim=c(0, max(as.numeric(simtab()$n_species))),
+					xlab="Number of sampled individuals", ylab="Number of species")
+				lapply(simlist, function(sim)	{	# gamma scale
+					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col=colorList[sim$sim_ID])
+					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor(colorList[sim$sim_ID], alpha=0.5))	# alpha scale curves
+				})
+				legend("bottomright", legend=names(colorList), col=colorList, bty="n")
+			}
 		}
-	})	#, width="auto", height=function(){500*nplot()})
+	}	, width=function(){300*nsim()}, height=function(){350*nplot()})
 	
 	output$debugging_simulation_table <- renderText({
-		paste("class selected: ", class(input$bigtable_output_rows_selected), ", length selected: ", length(input$bigtable_output_rows_selected), ", class bigtable: ", class(values$bigtable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$comppllot_types)
+		# paste("class selected: ", class(input$bigtable_output_rows_selected), ", length selected: ", length(input$bigtable_output_rows_selected), ", class bigtable: ", class(values$bigtable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$comppllot_types)
+		paste0("class simtab()$n_individuals: ", class(simtab()$n_individuals))
 	})
 
 #######################################################################################################################
