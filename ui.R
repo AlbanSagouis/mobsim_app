@@ -207,7 +207,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 				fluidRow(align="center", downloadButton("downloadSimulationList", "Download simulation data"))
 			),
 			column(width=3,
-				checkboxGroupInput(inputId="comppllot_types", label="Plot types", choices=c("Community map", "Distance decay", "Rarefaction curve"), selected="Rarefaction curve")
+				checkboxGroupInput(inputId="compplot_types", label="Plot types", choices=c("Community map", "Distance decay", "Rarefaction curve"), selected="Rarefaction curve")
 			),
 			column(width=3,
 				radioButtons(inputId="compplot_style", label="Plot style", choices=c("Split","Stacked"))
@@ -215,7 +215,9 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 		),
 		# actionButton("compare_selected_simulations","Compare selected simulations"),
 		# verbatimTextOutput("debugging_simulation_table"),
-		plotOutput("comp_plot"),
+		plotOutput("comp_plot",
+			brush = brushOpts(id = "comparison_plot_brush", resetOnNew = TRUE),
+			dblclick = "comparison_plot_dblclick"),
 		hr()
 	)
 	# tabPanel("Comparison",

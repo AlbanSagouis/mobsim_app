@@ -1365,7 +1365,7 @@ shinyServer(function(input, output, session) {
 
 ######################################################################################################################
 
-	# COMPARISON TAB
+	# COMPARISON
 	
 	simtab <- reactive({		
 		as.data.frame(values$bigtable[input$bigtable_output_rows_selected, ], stringsAsFactors=FALSE)
@@ -1373,19 +1373,48 @@ shinyServer(function(input, output, session) {
 	
 	output$simtab_output <- renderTable(simtab())
 	
-	nplot <- reactive(length(input$comppllot_types))
+	
+	
+	
+	
+	## PLOTTING
+	### Preparation
+	nplot <- reactive(length(input$compplot_types))
 	nsim <- reactive(nrow(simtab()))
+	simlist <- reactive(values$saved_simulations[as.character(simtab()$sim_ID)])
+	
+	### Zooming tools
+	compranges <- reactiveValues(x = NULL, y = NULL)
+	
+	observeEvent(input$bigtable_output_rows_selected, {
+		compranges$x <- c(0, max(unlist(lapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat)))))	# why sapply does not work?
+		compranges$y <- c(0, max(as.numeric(simtab()$n_species)))
+	})
+	
+	observeEvent(input$comparison_plot_brush, {
+		if (!is.null(input$comparison_plot_brush)) {
+			compranges$x <- c(input$comparison_plot_brush$xmin, input$comparison_plot_brush$xmax)
+			compranges$y <- c(input$comparison_plot_brush$ymin, input$comparison_plot_brush$ymax)
+		} else {
+			compranges$x <- c(0, max(sapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat))))
+			compranges$y <- c(0, max(as.numeric(simtab()$n_species)))
+		}
+	})
+	observeEvent(input$comparison_plot_dblclick, {
+		compranges$x <- c(0, max(sapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat))))
+		compranges$y <- c(0, max(as.numeric(simtab()$n_species)))
+	})
+	
 	
 	output$comp_plot <- renderPlot({
 		if(is.null(input$bigtable_output_rows_selected)) {
 			return()
 		} else {
-			simlist <- values$saved_simulations[as.character(simtab()$sim_ID)]
 			
 			if(input$compplot_style == "Split")	{
 				par(mfcol = c(nplot(), nsim()), mex=.6, mar=c(2.5,3,3,3))
-				lapply(simlist, function(sim) {
-					if("Community map" %in% input$comppllot_types) {
+				lapply(simlist(), function(sim) {
+					if("Community map" %in% input$compplot_types) {
 						plot(sim$community, main= paste0("sim ID ", sim$sim_ID))	# Plotting the community
 						graphics::rect(sim$sampled_quadrats$xy_dat$x,	# Plotting quadrats
 											sim$sampled_quadrats$xy_dat$y,
@@ -1393,40 +1422,40 @@ shinyServer(function(input, output, session) {
 											sim$sampled_quadrats$xy_dat$y + sqrt(sim$quadrats_area),
 											lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
 					}
-					if("Rarefaction curve" %in% input$comppllot_types) {
+					if("Rarefaction curve" %in% input$compplot_types) {
 						plot(spec_sample_curve(sim$community, method="rarefaction"))	# Plotting rarefaction curves
 						lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 						lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 					}
-					if("Distance decay" %in% input$comppllot_types) {
+					if("Distance decay" %in% input$compplot_types) {
 						plot(dist_decay_quadrats(sim$sampled_quadrats, method = "bray", binary = F), ylim=c(0,1))	# Plotting distance decay
 					}
 				})
 			}
 			
 			if(input$compplot_style == "Stacked")	{
-				community_x_limits <- range(sapply(simlist, function(sim) sim$community$x_min_max))
-				community_y_limits <- range(sapply(simlist, function(sim) sim$community$y_min_max))
+				# community_x_limits <- range(sapply(simlist(), function(sim) sim$community$x_min_max))
+				# community_y_limits <- range(sapply(simlist(), function(sim) sim$community$y_min_max))
 				colorList <- if(nsim() < 3) {rainbow(nsim())} else {
 					if(nsim() <= 12) brewer.pal(nsim(), "Paired") else  rainbow(nsim())}# replace with rcolorbrewer palette 'Paired' when 3>=nsim<=12
 				names(colorList) <- as.character(simtab()$sim_ID)
 				
 				plot(x=NA, y=NA, type="n",
 					# xlim=c(0, max(as.numeric(simtab()$n_individuals))),
-					xlim=c(0, max(sapply(simlist, function(sim) sum(sim$sampled_quadrats$spec_dat)))),
-					ylim=c(0, max(as.numeric(simtab()$n_species))),
+					xlim=compranges$x,
+					ylim=compranges$y,
 					xlab="Number of sampled individuals", ylab="Number of species")
-				lapply(simlist, function(sim)	{	# gamma scale
+				lapply(simlist(), function(sim)	{	# gamma scale
 					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species > 0))), lwd=3, col=colorList[as.character(sim$sim_ID)])
 					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor(colorList[as.character(sim$sim_ID)], alpha=0.5))	# alpha scale curves
 				})
-				legend("topleft", legend=names(colorList), col=colorList, bty="n", pch=16)
+				legend("topleft", legend=names(colorList), col=colorList, bty="n", pch=19)
 			}
 		}
 	})#, width=ifelse(is.null(nsim()), NA, function(){300*nsim()}), height=ifelse(is.null(nplot()), NA, function(){350*nplot()}))
 	
 	output$debugging_simulation_table <- renderText({
-		# paste("class selected: ", class(input$bigtable_output_rows_selected), ", length selected: ", length(input$bigtable_output_rows_selected), ", class bigtable: ", class(values$bigtable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$comppllot_types)
+		# paste("class selected: ", class(input$bigtable_output_rows_selected), ", length selected: ", length(input$bigtable_output_rows_selected), ", class bigtable: ", class(values$bigtable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$compplot_types)
 		paste0("class simtab()$n_individuals: ", class(simtab()$n_individuals))
 	})
 
