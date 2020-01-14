@@ -10,10 +10,16 @@
 library(shiny)
 # library(devtools)
 # install_github('MoBiodiv/mobsim')    # downloads the latest version of the package
-library(mobsim, lib.loc="./Library")
+# library(mobsim, lib.loc="./Library")
 # library(ggplot2)
-# library(markdown)
+library(markdown)
 library(RColorBrewer)
+
+source("code/Diversity_Area_Relationships.R", local = TRUE)
+source("code/rThomas_r.r", local = TRUE)
+source("code/Sample_quadrats.R", local = TRUE)
+source("code/Sim_Community.R", local = TRUE)
+source("code/SAC_spatial.R", local = TRUE)
 
 bigtable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
 	 'gamma_richness','gamma_shannon','gamma_simpson',
@@ -177,7 +183,7 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_mother_points"))	{
 			return()
 		} else {
-			selectizeInput("sad_type", "SAD Type", choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"))
+			selectizeInput("sad_type", "SAD Type", choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")
 		}					
 	})
 						
@@ -230,7 +236,7 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
-			selectizeInput(inputId="spatdist", "Cluster parameter", choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"))
+			selectizeInput(inputId="spatdist", "Cluster parameter", choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
 		}					
 	})
 
@@ -459,7 +465,7 @@ shinyServer(function(input, output, session) {
 				 heights = c(1,1), widths=c(1,1,1))
 		
 		sad1 <- community_to_sad(sim.com)
-		sac1 <- spec_sample_curve(sim.com)
+		sac1 <- spec_sample_curve(sim.com, method="rarefaction")
 		divar1 <- divar(sim.com, exclude_zeros=F)
 		dist1 <- dist_decay(sim.com)
 		
@@ -480,7 +486,15 @@ shinyServer(function(input, output, session) {
 	
   output$InteractivePlot <- renderPlot({
     input$Restart
-    
+    validate(
+		need(input$spatdist, label="1"),
+		need(input$spatagg, label="2"),
+		need(input$spatcoef, label="3"),
+		need(input$method_type, label="4"),
+		need(input$sad_type, label="5"),
+		need(input$S, label="S")
+	)
+
     isolate({
 		
 		if(input$method_type != "uploading_community_data") {

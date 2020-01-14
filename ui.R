@@ -9,12 +9,12 @@
 
 library(shiny)
 library(shinyBS)
-library(mobsim)
+# library(mobsim)
 library(DT)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
+navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	tabPanel("MOBsim", 
 
@@ -85,8 +85,8 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 		fluidRow(align="center",
 			# plotOutput("PreviousInteractivePlot", height="600px",width="750px"),
 			# plotOutput("InteractivePlot", height="600px",width="750px")
-			plotOutput("PreviousInteractivePlot", height="300px",width="1500px"),
-			plotOutput("InteractivePlot", height="300px",width="1500px")
+			plotOutput("InteractivePlot", height="300px",width="1500px"),
+			plotOutput("PreviousInteractivePlot", height="300px",width="1500px")
 		),
 		
 		fluidRow(align="center",
