@@ -50,7 +50,8 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 					plotOutput(outputId="on_plot_selection",
 						click = "plot_click",
 						brush = brushOpts(id="plot_brush", resetOnNew=TRUE)
-					)
+					),
+					uiOutput("species_range_uploading_tool")
 					# fluidRow(align="center", actionButton(inputId="resetPlot", label="Clear plot"))
 						# column(width=6, actionButton(inputId="resetBrush", label="Reset brush"))
 					# uiOutput("info")

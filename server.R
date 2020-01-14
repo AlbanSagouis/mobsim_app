@@ -221,7 +221,7 @@ shinyServer(function(input, output, session) {
 		})
 	})
 
-	# debugging
+	### debugging
 	output$debugging_seed <- renderText(paste0("input = ", input$sbssimulation_seed, ", reactive = ", seed_simulation()))
 
 	##		random_mother_points
@@ -383,6 +383,7 @@ shinyServer(function(input, output, session) {
 		# session$resetBrush("plot_brush")
 		# brush <<- NULL
 	# })
+	
 	### changing species_ID after each brushing event
 	observeEvent(input$plot_brush, {
 		updateSelectInput(session,
@@ -391,6 +392,7 @@ shinyServer(function(input, output, session) {
 		)
 	})
 	
+	### Range values from plot
 	observeEvent(input$plot_brush, {
 		add_row = data.frame(species_ID = factor(input$species_ID, levels = paste("species", 1:input$S, sep="_")),
 									xmin = input$plot_brush$xmin,
@@ -401,7 +403,23 @@ shinyServer(function(input, output, session) {
 		values$DT_species_ranges = rbind(values$DT_species_ranges, add_row)
 	})
 	
-
+	### uploading range values per species
+	output$species_range_uploading_tool <- renderUI({
+		if (input$method_type != "click_for_species_ranges")	{
+			return()
+		} else {
+			fileInput(inputId="loaded_ranges", label="Choose a data.frame of ranges", multiple = FALSE,
+						accept = c("text/csv",
+                         "text/comma-separated-values,text/plain",
+                         ".csv"), width = NULL,
+						buttonLabel = "Browse...", placeholder = "No file selected")
+		}
+	})
+	
+	observeEvent(input$loaded_ranges,{
+		req(input$loaded_ranges)
+		values$DT_species_ranges <- read.csv(input$loaded_ranges$datapath, h=T)
+	})
 	### showing coordinates in a table
 	output$datatable_species_ranges <- renderDataTable({
 	if (!input$method_type %in% c("click_for_species_ranges"))	{
