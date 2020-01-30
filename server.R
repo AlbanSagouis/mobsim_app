@@ -13,13 +13,14 @@ library(shiny)
 # library(mobsim, lib.loc="./Library")
 # library(ggplot2)
 library(markdown)
-library(RColorBrewer)
 
-source("code/Diversity_Area_Relationships.R", local = TRUE)
-source("code/rThomas_r.r", local = TRUE)
-source("code/Sample_quadrats.R", local = TRUE)
-source("code/Sim_Community.R", local = TRUE)
-source("code/SAC_spatial.R", local = TRUE)
+source("extras/code/Diversity_Area_Relationships.R", local = TRUE)
+source("extras/code/rThomas_r.r", local = TRUE)
+source("extras/code/Sample_quadrats.R", local = TRUE)
+source("extras/code/Sim_Community.R", local = TRUE)
+source("extras/code/SAC_spatial.R", local = TRUE)
+source("extras/help/Labels.R", local = TRUE)
+source("extras/graphical_parameters.R", local = TRUE)
 
 bigtable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
 	 'gamma_richness','gamma_shannon','gamma_simpson',
@@ -27,10 +28,27 @@ bigtable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulati
 )
 empty_bigtable <- function() matrix(NA, nrow=0, ncol=length(bigtable_names), dimnames=list(c(), bigtable_names))
 
+
+
+
 # Define server logic for slider examples
 shinyServer(function(input, output, session) {
-
+   # Global values
 	values <- reactiveValues()
+	
+	# Plotting preferences
+	color_palette_individuals <- reactive({
+	   switch(input$color_palette,
+	          "rainbow" = rainbow(input$S),
+	          "brewer.paired" = if(input$S >= 3 & input$S <= 13) brewer.paired(input$S) else rainbow(input$S)
+	   )
+	})
+	sbscolor_palette_individuals <- reactive({
+	   switch(input$color_palette,
+	          "rainbow" = rainbow(input$sbsS),
+	          "Paired" = if(input$sbsS >= 3 & input$sbsS <= 13) brewer.paired(input$sbsS) else rainbow(input$sbsS)
+	   )
+	})
 
 	# Big table tab
 	
@@ -192,9 +210,9 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges") | is.null(input$sad_type))	
 			return()
 		switch(input$sad_type,
-			"lnorm"=sliderInput("coef", label="CV(abundance), i.e. standard deviation of abundances divided by the mean abundance",value=1, min=0, max=5, step=0.1, ticks=F),
-			"geom"=sliderInput("coef",label="Probability of success in each trial. 0 < prob <= 1",value=0.5,min=0,max=1,step=0.1, ticks=F),
-			"ls"=textInput("coef",label="Fisher's alpha parameter",value=1)
+			"lnorm"=sliderInput("coef", label = "CV(abundance), i.e. standard deviation of abundances divided by the mean abundance", value=1, min=0, max=5, step=0.1, ticks=F),
+			"geom"=sliderInput("coef", label = "Probability of success in each trial. 0 < prob <= 1", value=0.5,min=0,max=1,step=0.1, ticks=F),
+			"ls"=textInput("coef", label = "Fisher's alpha parameter", value = 1)
 		)
 	})
 
@@ -202,7 +220,7 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
-			textInput(inputId="spatagg", label="Spatial Aggregation (mean distance from mother points)", value = 0.1)
+			textInput(inputId = "spatagg", label = Labels$spatagg, value = 0.1)
 		}			
 	})
 	
@@ -236,7 +254,7 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
-			selectizeInput(inputId="spatdist", "Cluster parameter", choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
+			selectizeInput(inputId="spatdist", Labels$spatdist, choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
 		}					
 	})
 
@@ -244,7 +262,7 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
-			textInput(inputId="spatcoef",label="Integer values separated by commas", value="0")
+			textInput(inputId="spatcoef",label=Labels$spatcoef, value="0")
 		}					
 	})
 
@@ -459,7 +477,7 @@ shinyServer(function(input, output, session) {
 
 	## plot theme
 	### plot function
- 	plot_layout <- function(sim.com) {
+ 	plot_layout <- function(sim.com, colors_for_individuals) {
 		layout(matrix(c(1,2,3,
 							 4,5,6), byrow = T, nrow = 1, ncol = 6),
 				 heights = c(1,1), widths=c(1,1,1))
@@ -472,7 +490,7 @@ shinyServer(function(input, output, session) {
 		plot(sad1, method = "octave")
 		plot(sad1, method = "rank")
 		
-		plot(sim.com, main = "Community distribution")
+		plot(sim.com, main = "Community distribution", col = colors_for_individuals)
 		
 		plot(sac1)
 		plot(divar1)
@@ -486,14 +504,14 @@ shinyServer(function(input, output, session) {
 	
   output$InteractivePlot <- renderPlot({
     input$Restart
-    validate(
-		need(input$spatdist, label="1"),
-		need(input$spatagg, label="2"),
-		need(input$spatcoef, label="3"),
-		need(input$method_type, label="4"),
-		need(input$sad_type, label="5"),
-		need(input$S, label="S")
-	)
+    # validate(
+		# need(input$spatdist, label="1"),
+		# need(input$spatagg, label="2"),
+		# need(input$spatcoef, label="3"),
+		# need(input$method_type, label="4"),
+		# need(input$sad_type, label="5"),
+		# need(input$S, label="S")
+	# )
 
     isolate({
 		
@@ -553,7 +571,7 @@ shinyServer(function(input, output, session) {
 			session$userData$sim.com <- get(load(input$loaded_file$datapath))
 		}
 
-		plot_layout(session$userData$sim.com)
+		plot_layout(session$userData$sim.com, colors_for_individuals = color_palette_individuals())
 		session$userData$previous.sim.com <- session$userData$sim.com
 		
 	})
@@ -566,7 +584,7 @@ shinyServer(function(input, output, session) {
 		if(!input$keepInteractivePlot){
 			return()
 		} else {
-			plot_layout(session$userData$previous.sim.com)
+			plot_layout(session$userData$previous.sim.com, colors_for_individuals = color_palette_individuals())
 		}
 	})
 	
@@ -613,7 +631,7 @@ shinyServer(function(input, output, session) {
 				tiff(filename=fname, width=15, height=3, units="in", res=300)	# input$plot_saving_resolution
 				print(plot_layout(session$userData$sim.com))
 				dev.off()
-			},
+			}
 		)
 		# content=function(fname) {
 			# png(filename=fname, width=1500, height=300)
@@ -665,7 +683,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			# session$userData$sampled_quadrats <- sampling_quadrats()
 			quadrats_coordinates <- sampling_quadrats()$xy_dat
-			plot(session$userData$sim.com, main = "Community distribution")
+			plot(session$userData$sim.com, main = "Community distribution", col= color_palette_individuals())
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
 								quadrats_coordinates$x + sqrt(input$area_of_quadrats),
@@ -691,7 +709,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			session$userData$previous_sampled_quadrats <- sampling_quadrats()
-			plot(session$userData$sim.com, main = "Community distribution")
+			plot(session$userData$sim.com, main = "Community distribution", col= color_palette_individuals())
 			quadrats_coordinates <- session$userData$previous_sampled_quadrats$xy_dat
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
@@ -1187,7 +1205,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			quadrats_coordinates <- sbssampling_quadrats()$xy_dat
-			plot(sbssim.com(), main = "Community distribution")
+			plot(sbssim.com(), main = "Community distribution", col= sbscolor_palette_individuals())
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
 								quadrats_coordinates$x + sqrt(input$sbsarea_of_quadrats),
@@ -1350,7 +1368,7 @@ shinyServer(function(input, output, session) {
 		output[[sampling_plot_ID]] <- renderPlot({
 			isolate({
 				quadrats_coordinates <- sbssampling_quadrats()$xy_dat
-				plot(sbssim.com(), main = "Community distribution")
+				plot(sbssim.com(), main = "Community distribution", col= sbscolor_palette_individuals())
 				graphics::rect(quadrats_coordinates$x,
 									quadrats_coordinates$y,
 									quadrats_coordinates$x + sqrt(input$sbsarea_of_quadrats),
@@ -1468,8 +1486,12 @@ shinyServer(function(input, output, session) {
 			if(input$compplot_style == "Stacked")	{
 				# community_x_limits <- range(sapply(simlist(), function(sim) sim$community$x_min_max))
 				# community_y_limits <- range(sapply(simlist(), function(sim) sim$community$y_min_max))
-				colorList <- if(nsim() < 3) {rainbow(nsim())} else {
-					if(nsim() <= 12) brewer.pal(nsim(), "Paired") else  rainbow(nsim())}# replace with rcolorbrewer palette 'Paired' when 3>=nsim<=12
+
+				colorList <- if(nsim() > palette_tab[palette_tab$palette_name == input$color_palette, "palette_max_number"])   {
+				   viridis(nsim())
+				} else {
+			      do.call(input$color_palette, list(n=nsim()))
+				}
 				names(colorList) <- as.character(simtab()$sim_ID)
 				
 				plot(x=NA, y=NA, type="n",
@@ -1477,6 +1499,7 @@ shinyServer(function(input, output, session) {
 					xlim=compranges$x,
 					ylim=compranges$y,
 					xlab="Number of sampled individuals", ylab="Number of species")
+				
 				lapply(simlist(), function(sim)	{	# gamma scale
 					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species > 0))), lwd=3, col=colorList[as.character(sim$sim_ID)])
 					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor(colorList[as.character(sim$sim_ID)], alpha=0.5))	# alpha scale curves
@@ -1559,8 +1582,23 @@ shinyServer(function(input, output, session) {
 	
 	
 	
+	# GRAPHICAL PARAMETERS TAB
+	## Palettes
+	output$discrete_palettes <- renderPlot({
+	   labs <- paste0(palette_tab$palette_name, " (max ",
+	                  palette_tab$palette_max_number, ")")
+	   par(mar=c(0,5,3,1), cex=2)
+	   pal.bands(alphabet(), alphabet2(), cols25(), glasbey(), kelly(), okabe(), polychrome(), stepped(), stepped2(), stepped3(), tol(), watlington(), brewer.paired(12), labels=labs, show.names=FALSE)
+	})
 	
-	
+	output$CBF_test_plot <- renderPlot({# Check colorblindness suitability
+	   if(input$CBF_test){
+	      par(mar=c(0,5,3,1), cex=2)
+	      pal.safe(get(input$color_palette), palette_tab[palette_tab$palette_name == input$color_palette, "palette_max_number"])   # call the proper pal function with the string, add the max number of colors
+	   } else {
+	      return()
+	   }
+	})
 	
 	
 	

@@ -11,10 +11,13 @@ library(shiny)
 library(shinyBS)
 # library(mobsim)
 library(DT)
+source("extras/help/Help.R", local = TRUE)
+source("extras/help/Labels.R", local = TRUE)
+source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
+navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	tabPanel("MOBsim", 
 
@@ -38,9 +41,12 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 					uiOutput("CVslider"),
 
 					uiOutput("text_spat_agg"),
+					icon("question-circle"),
 											
 					uiOutput("spatdist"),
+					icon("question-circle"),
 					uiOutput("spatcoef"),
+					icon("question-circle"),
 					
 					uiOutput("community_uploading_tool")
 				),
@@ -96,7 +102,20 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			
 			column(width=6, selectInput("plot_saving_format", label="Saving format", choices=c("tiff","png"), selected="png")),
 			column(width=6, downloadButton("downloadMobPlot", "Download plot"))
-		)
+
+		),
+
+		bsPopover(id="N", title = Help$N$title, content=Help$N$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="S", title = Help$S$title, content=Help$S$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="select_sad_type", title = Help$select_sad_type$title, content = Help$select_sad_type$content),
+		bsPopover(id="CVslider", title = Help$CVslider$title, content = Help$CVslider$content),
+		bsPopover(id="text_spat_agg", title = Help$spatagg$title, content = Help$spatagg$content),
+		bsPopover(id="spatdist", title = Help$spatdist$title, content = Help$spatdist$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="spatcoef", title = Help$spatcoef$title, content = Help$spatcoef$content),
+		bsPopover(id="method_type", title= Help$method_type$title, content = Help$method_type$content, placement="bottom"),
+		bsPopover(id="community_uploading_tool", title = Help$community_uploading_tool$title, content = Help$community_uploading_tool$content),
+		bsPopover(id="species_range_uploading_tool", title = Help$species_range_uploading_tool$title, content = Help$species_range_uploading_tool$content)
+		
 	),
 	
 	tabPanel("Sampling",
@@ -107,7 +126,7 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 		
 		# column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
 		# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
-		column(width=6, 
+		column(width=6,
 			actionButton("new_sampling_button", label="New sampling"),
 			actionButton("keepRarefactionCurvesPlot", label='Keep this sampling design')
 		),	#, style = "margin-top: 25px;"
@@ -129,16 +148,22 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 					dblclick = "rarefaction_curves_plot_dblclick",
 					brush = brushOpts(
 						id = "rarefaction_curves_plot_brush",
-						resetOnNew = TRUE),
+						resetOnNew = TRUE)
 					# hover = hoverOpts(id ="rarefaction_curves_plot_hover")
 				)
 			),
 			column(width=4,
-				plotOutput("sampling_plot", click="sampling_plot_click"),	#, height="600px",width="600px"
-				plotOutput("sampling_distance_decay_plot")
+				plotOutput("sampling_plot", click="sampling_plot_click")	#, height="600px",width="600px"
+				# plotOutput("sampling_distance_decay_plot")
 			)
-		)
+		),
+		
+		bsPopover(id = "area_of_quadrats", title = Help$area_of_quadrats$title, content = Help$area_of_quadrats$content),
+		bsPopover(id = "rarefaction_curves_plot", title = Help$rarefaction_curves_plot$title, content = Help$rarefaction_curves_plot$content, trigger = "hover"),
+		bsPopover(id = "sampling_plot", title = Help$sampling_plot$title, content = Help$sampling_plot$content)
 	),
+	
+	
 	tabPanel("Step-by-step",
         # tags$head(tags$style(HTML("
         # . {
@@ -160,11 +185,11 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				selectizeInput("sbssad_type", "SAD Type", choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls")),
 				uiOutput("sbsCVslider"),
 
-				selectizeInput(inputId="sbsspatdist", "Cluster parameter", choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster")),
+				selectizeInput(inputId="sbsspatdist", Labels$spatdist, choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster")),
 				helpText("Number of mother points per species OR number of individuals per cluster."),
-				textInput(inputId="sbsspatcoef",label="Integer values separated by commas", value="0"),
-				textInput(inputId="sbsspatagg", label="Spatial Aggregation (mean distance from mother points)", value = 0.1),
-				textInput("sbssimulation_seed", label="Simulation seed", value="Not specified"),
+				textInput(inputId="sbsspatcoef",label = Labels$spatcoef, value="0"),
+				textInput(inputId="sbsspatagg", label = Labels$spatagg, value = 0.1),
+				textInput("sbssimulation_seed", label = "Simulation seed", value="Not specified"),
 				# verbatimTextOutput("debugging_seed"),
 				
 				# Restart action button
@@ -193,15 +218,25 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 			# distance decay
 				uiOutput("sbsfirst_step")
 			)
-		)
+		),
+		bsPopover(id="sbsS", title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="sbsN", title =  Help$N$title, content =  Help$N$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="sbsspatagg", title = Help$spatagg$title, content = Help$spatagg$content),
+		bsPopover(id="sbsspatdist", title = Help$spatdist$title, content = Help$spatdist$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="sbsspatcoef", title=Help$spatcoef$title, content=Help$spatcoef$content),
+		bsPopover(id="sbssimulation_seed", title = Help$simulation_seed$title, content=Help$simulation_seed$content),
+		bsPopover(id="sbssampling_seed", title = Help$sampling_seed$title, content=Help$sampling_seed$content),
+		bsPopover(id="sbskeep_step", title = Help$keep_step$title, content = Help$keep_step$content, placement = "bottom", trigger = "hover", options = NULL)
 	),
+	
+	
 	tabPanel("Big Table",
 		dataTableOutput("bigtable_output"),
 		verbatimTextOutput("bigtable_selected_simulations"),
 		fluidRow(
 			column(width=3,
-				fluidRow(align="center", actionButton("rem_all_simulations", "Remove all simulations")),
-				fluidRow(align="center", actionButton("rem_selected_simulations", "Remove selected simulations"))
+				fluidRow(align="center", actionButton("rem_all_simulations", "Erase all rows")),
+				fluidRow(align="center", actionButton("rem_selected_simulations", "Erase selected rows"))
 			),
 			column(width=3,
 				fluidRow(align="center", downloadButton("downloadSimulationTable", "Download simulation table")),
@@ -219,8 +254,28 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 		plotOutput("comp_plot",
 			brush = brushOpts(id = "comparison_plot_brush", resetOnNew = TRUE),
 			dblclick = "comparison_plot_dblclick"),
-		hr()
+		hr(),
+
+   	bsPopover(id = "bigtable_output", title = Help$bigtable_output$title, Help$bigtable_output$content),
+   	bsPopover(id = "downloadSimulationTable", title = Help$downloadSimulationTable$title, content = Help$downloadSimulationTable$content),
+   	bsPopover(id = "downloadSimulationList", title = Help$downloadSimulationList$title, content = Help$downloadSimulationList$content)
+		
+	),
+	tabPanel("Plot parameters",
+   	sidebarLayout(
+   	   sidebarPanel(
+            selectInput("color_palette", label="Choose color palette", choices=palette_tab$palette_name, selected = "brewer.paired"),
+            radioButtons("dark_background", label = "Plot background color (Not implemented yet)", choices = c("Light","Dark")),
+            checkboxInput("CBF_test", label = "Show Colorblindness Suitability")
+   	   ),
+   	   mainPanel(
+   	      plotOutput("discrete_palettes"),
+   	      plotOutput("CBF_test_plot")
+   	   )
+      ),
+	   bsPopover(id="color_palette", title = Help$color_palette$title, content = Help$color_palette$content, placement = "top", trigger = "hover", options = NULL)
 	)
+	
 	# tabPanel("Comparison",
 		# tableOutput("simtab_output"),
 	# )
