@@ -38,16 +38,10 @@ shinyServer(function(input, output, session) {
 	
 	# Plotting preferences
 	color_palette_individuals <- reactive({
-	   switch(input$color_palette,
-	          "rainbow" = rainbow(input$S),
-	          "brewer.paired" = if(input$S >= 3 & input$S <= 13) brewer.paired(input$S) else rainbow(input$S)
-	   )
+      do.call(color_palette(), list(n=input$S))
 	})
 	sbscolor_palette_individuals <- reactive({
-	   switch(input$color_palette,
-	          "rainbow" = rainbow(input$sbsS),
-	          "Paired" = if(input$sbsS >= 3 & input$sbsS <= 13) brewer.paired(input$sbsS) else rainbow(input$sbsS)
-	   )
+	   do.call(color_palette(), list(n=input$sbsS))
 	})
 
 	# Big table tab
@@ -1465,7 +1459,7 @@ shinyServer(function(input, output, session) {
 				par(mfcol = c(nplot(), nsim()), mex=.6, mar=c(2.5,3,3,3))
 				lapply(simlist(), function(sim) {
 					if("Community map" %in% input$compplot_types) {
-						plot(sim$community, main= paste0("sim ID ", sim$sim_ID))	# Plotting the community
+						plot(sim$community, main= paste0("sim ID ", sim$sim_ID), col = color_palette_individuals())	# Plotting the community
 						graphics::rect(sim$sampled_quadrats$xy_dat$x,	# Plotting quadrats
 											sim$sampled_quadrats$xy_dat$y,
 											sim$sampled_quadrats$xy_dat$x + sqrt(sim$quadrats_area),
@@ -1487,10 +1481,14 @@ shinyServer(function(input, output, session) {
 				# community_x_limits <- range(sapply(simlist(), function(sim) sim$community$x_min_max))
 				# community_y_limits <- range(sapply(simlist(), function(sim) sim$community$y_min_max))
 
-				colorList <- if(nsim() > palette_tab[palette_tab$palette_name == input$color_palette, "palette_max_number"])   {
-				   viridis(nsim())
+				colorList <- if(palette_tab[palette_tab$palette_name == color_palette(), "palette_type"] == "continuous") { # if there is no maximal number of values
+				   do.call(color_palette(), list(n=nsim()))
 				} else {
-			      do.call(input$color_palette, list(n=nsim()))
+   				   if(nsim() > as.numeric(as.character(palette_tab[palette_tab$palette_name == color_palette(), "palette_max_number"])))   { # ca ca ne marche que si la palette est discrete
+   				   viridis(nsim())
+   				} else {
+   			      do.call(color_palette(), list(n=nsim()))
+   				}
 				}
 				names(colorList) <- as.character(simtab()$sim_ID)
 				
@@ -1584,24 +1582,45 @@ shinyServer(function(input, output, session) {
 	
 	# GRAPHICAL PARAMETERS TAB
 	## Palettes
-	output$discrete_palettes <- renderPlot({
-	   labs <- paste0(palette_tab$palette_name, " (max ",
-	                  palette_tab$palette_max_number, ")")
-	   par(mar=c(0,5,3,1), cex=2)
-	   pal.bands(alphabet(), alphabet2(), cols25(), glasbey(), kelly(), okabe(), polychrome(), stepped(), stepped2(), stepped3(), tol(), watlington(), brewer.paired(12), labels=labs, show.names=FALSE)
+	
+	observe({
+	   updateSelectInput(session, "color_palette", selected = color_palette())
 	})
+	
+	output$discrete_palettes <- renderPlot({
+	   labs <- paste0(palette_tab$palette_name, ifelse( palette_tab$palette_type == "discrete", "(max ", ""),
+	                  palette_tab$palette_max_number, ifelse( palette_tab$palette_type == "discrete", ")", ""))
+	   par(mar=c(0,5,1,1), cex=2)
+	   pal.bands(alphabet(), alphabet2(), cols25(), glasbey(), kelly(), okabe(), polychrome(), stepped(), stepped2(), stepped3(), tol(), watlington(), brewer.paired(12), 
+	             cubehelix, gnuplot, parula, tol.rainbow, cividis, brewer.spectral, brewer.brbg,ocean.thermal, ocean.curl, ocean.haline, inferno, plasma, viridis,
+	             labels=labs, show.names=FALSE)
+	}, width=520, height=600)
 	
 	output$CBF_test_plot <- renderPlot({# Check colorblindness suitability
 	   if(input$CBF_test){
-	      par(mar=c(0,5,3,1), cex=2)
-	      pal.safe(get(input$color_palette), palette_tab[palette_tab$palette_name == input$color_palette, "palette_max_number"])   # call the proper pal function with the string, add the max number of colors
+	      par(mar=c(0,4,1,1), cex=2)
+	      if(palette_tab[palette_tab$palette_name == color_palette(), "palette_max_number"] == "discrete")  {
+   	      pal.safe(pal = get(input$color_palette),
+   	               n = as.numeric(as.character(palette_tab[palette_tab$palette_name == input$color_palette, "palette_max_number"]))) # call the proper pal function with the string, add the max number of colors
+	      } else {
+	         pal.safe(pal = get(input$color_palette), main = input$color_palette) # why issues when replaced by color_palette()?
+	      }
 	   } else {
 	      return()
 	   }
+	}, width=520, height=600)
+	
+	output$clicktext <- renderText({
+	   paste0("y = ", round(as.numeric(input$discrete_palettes_click$y), 2), ", pal = ", color_palette(), ", class = ", class(color_palette()))
 	})
 	
-	
-	
+	color_palette <- reactive({
+	   if(is.null(input$discrete_palettes_click$y)) {
+	      input$color_palette
+	   } else {
+	      as.character(palette_tab[nrow(palette_tab) - round(input$discrete_palettes_click$y, 1) + 1, "palette_name"])
+	   }
+	})
 
 }) # end of server()
 

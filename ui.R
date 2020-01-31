@@ -17,7 +17,7 @@ source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
+navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	tabPanel("MOBsim", 
 
@@ -266,12 +266,13 @@ navbarPage("Visualization of biodiversity pattern", selected="Step-by-step",
    	   sidebarPanel(
             selectInput("color_palette", label="Choose color palette", choices=palette_tab$palette_name, selected = "brewer.paired"),
             radioButtons("dark_background", label = "Plot background color (Not implemented yet)", choices = c("Light","Dark")),
-            checkboxInput("CBF_test", label = "Show Colorblindness Suitability")
+            checkboxInput("CBF_test", label = "Show Colorblindness Suitability"),
+            textOutput("clicktext")
    	   ),
    	   mainPanel(
-   	      plotOutput("discrete_palettes"),
-   	      plotOutput("CBF_test_plot")
-   	   )
+   	      column(width=6, plotOutput("discrete_palettes", click = "discrete_palettes_click")),
+   	      column(width=6, plotOutput("CBF_test_plot"))
+         )
       ),
 	   bsPopover(id="color_palette", title = Help$color_palette$title, content = Help$color_palette$content, placement = "top", trigger = "hover", options = NULL)
 	)
