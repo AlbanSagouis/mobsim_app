@@ -267,7 +267,8 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
             selectInput("color_palette", label="Choose color palette", choices=palette_tab$palette_name, selected = "brewer.paired"),
             radioButtons("dark_background", label = "Plot background color (Not implemented yet)", choices = c("Light","Dark")),
             checkboxInput("CBF_test", label = "Show Colorblindness Suitability"),
-            textOutput("clicktext")
+            textOutput("clicktext"),
+            checkboxGroupInput(inputId = "rarefaction_curves_loglog", label = "Logarithmic axis", choices = c("x","y"), selected = c("x","y"), inline=TRUE)
    	   ),
    	   mainPanel(
    	      column(width=6, plotOutput("discrete_palettes", click = "discrete_palettes_click")),

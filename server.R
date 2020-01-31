@@ -486,7 +486,7 @@ shinyServer(function(input, output, session) {
 		
 		plot(sim.com, main = "Community distribution", col = colors_for_individuals)
 		
-		plot(sac1)
+		plot(sac1, log = rarefaction_curves_loglog())
 		plot(divar1)
 		plot(dist1)
 	}
@@ -498,6 +498,7 @@ shinyServer(function(input, output, session) {
 	
   output$InteractivePlot <- renderPlot({
     input$Restart
+    input$rarefaction_curves_loglog
     # validate(
 		# need(input$spatdist, label="1"),
 		# need(input$spatagg, label="2"),
@@ -827,9 +828,10 @@ shinyServer(function(input, output, session) {
 		input$rarefaction_curves_plot_dblclick	# zooming in and out
 		# input$rarefaction_curves_plot_click	# highlighting individual site
 		input$sampling_plot_click_info			# highlighting individual site
+		input$rarefaction_curves_loglog        # update plot when log axes rule change
 		
 		isolate({
-			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
+			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
 			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(rarefaction_curves_list())) {		# verification aid
@@ -853,9 +855,10 @@ shinyServer(function(input, output, session) {
 		input$rarefaction_curves_plot_dblclick	# zooming in and out
 		# input$rarefaction_curves_plot_hover	# highlighting individual site
 		# input$sampling_plot_click_info			# highlighting individual site
+		input$rarefaction_curves_loglog        # update plot when log axes rule change
 		
 		isolate({
-			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
+			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
 			lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
@@ -961,9 +964,10 @@ shinyServer(function(input, output, session) {
 			input$rarefaction_curves_plot_dblclick	# zooming in and out
 			# input$rarefaction_curves_plot_hover	# highlighting individual site
 			# input$sampling_plot_click_info			# highlighting individual site
-			
+		   input$rarefaction_curves_loglog        # update plot when log axes rule change
+		   
 			isolate({
-				plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y)
+				plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
 				lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 				lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 				# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
@@ -1237,9 +1241,10 @@ shinyServer(function(input, output, session) {
 		input$sbsrarefaction_curves_plot_dblclick	# zooming in and out
 		# input$rarefaction_curves_plot_click	# highlighting individual site
 		# input$sampling_plot_click_info			# highlighting individual site
+		input$rarefaction_curves_loglog        # update plot when log axes rule change
 		
 		isolate({
-			plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y)
+			plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y, log = rarefaction_curves_loglog())
 			lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(sbsrarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(sbsrarefaction_curves_list())) {		# verification aid
@@ -1379,7 +1384,7 @@ shinyServer(function(input, output, session) {
 		
 		output[[rarefaction_plot_ID]] <- renderPlot({
 			isolate({
-				plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y)
+				plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y, log = rarefaction_curves_loglog())
 				lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 				lapply(sbsrarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			})
@@ -1431,8 +1436,8 @@ shinyServer(function(input, output, session) {
 	compranges <- reactiveValues(x = NULL, y = NULL)
 	
 	observeEvent(input$bigtable_output_rows_selected, {
-		compranges$x <- c(0, max(unlist(lapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat)))))	# why sapply does not work?
-		compranges$y <- c(0, max(as.numeric(simtab()$n_species)))
+		compranges$x <- c(1, max(unlist(lapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat)))))	# why sapply does not work?
+		compranges$y <- c(1, max(as.numeric(simtab()$n_species)))
 	})
 	
 	observeEvent(input$comparison_plot_brush, {
@@ -1440,13 +1445,13 @@ shinyServer(function(input, output, session) {
 			compranges$x <- c(input$comparison_plot_brush$xmin, input$comparison_plot_brush$xmax)
 			compranges$y <- c(input$comparison_plot_brush$ymin, input$comparison_plot_brush$ymax)
 		} else {
-			compranges$x <- c(0, max(sapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat))))
-			compranges$y <- c(0, max(as.numeric(simtab()$n_species)))
+			compranges$x <- c(1, max(sapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat))))
+			compranges$y <- c(1, max(as.numeric(simtab()$n_species)))
 		}
 	})
 	observeEvent(input$comparison_plot_dblclick, {
-		compranges$x <- c(0, max(sapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat))))
-		compranges$y <- c(0, max(as.numeric(simtab()$n_species)))
+		compranges$x <- c(1, max(sapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat))))
+		compranges$y <- c(1, max(as.numeric(simtab()$n_species)))
 	})
 	
 	
@@ -1467,7 +1472,7 @@ shinyServer(function(input, output, session) {
 											lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
 					}
 					if("Rarefaction curve" %in% input$compplot_types) {
-						plot(spec_sample_curve(sim$community, method="rarefaction"))	# Plotting rarefaction curves
+						plot(spec_sample_curve(sim$community, method="rarefaction"), log = rarefaction_curves_loglog())	# Plotting rarefaction curves
 						lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 						lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 					}
@@ -1496,7 +1501,7 @@ shinyServer(function(input, output, session) {
 					# xlim=c(0, max(as.numeric(simtab()$n_individuals))),
 					xlim=compranges$x,
 					ylim=compranges$y,
-					xlab="Number of sampled individuals", ylab="Number of species")
+					xlab="Number of sampled individuals", ylab="Number of species", log = rarefaction_curves_loglog())
 				
 				lapply(simlist(), function(sim)	{	# gamma scale
 					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species > 0))), lwd=3, col=colorList[as.character(sim$sim_ID)])
@@ -1611,7 +1616,7 @@ shinyServer(function(input, output, session) {
 	}, width=520, height=600)
 	
 	output$clicktext <- renderText({
-	   paste0("y = ", round(as.numeric(input$discrete_palettes_click$y), 2), ", pal = ", color_palette(), ", class = ", class(color_palette()))
+	   paste0("y = ", round(as.numeric(input$discrete_palettes_click$y), 2), ", pal = ", color_palette(), ", class = ", class(color_palette()), ", loglog = ", paste(input$rarefaction_curves_loglog, collapse=""))
 	})
 	
 	color_palette <- reactive({
@@ -1622,6 +1627,13 @@ shinyServer(function(input, output, session) {
 	   }
 	})
 
+	
+	rarefaction_curves_loglog <- reactive({
+	   paste(input$rarefaction_curves_loglog, collapse = "")
+	})
+	
+	
+	
 }) # end of server()
 
 
