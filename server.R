@@ -374,7 +374,7 @@ shinyServer(function(input, output, session) {
 	observe({
 		output$simcomsummary <- renderPrint({
 			input$Restart
-			summary(session$userData$sim.com, digits=2)
+			summary(sim.com(), digits=2)
 		})
 	})
 
@@ -496,9 +496,9 @@ shinyServer(function(input, output, session) {
 	
 	
 	
-  output$InteractivePlot <- renderPlot({
+   sim.com <- reactive({
     input$Restart
-    input$rarefaction_curves_loglog
+
     # validate(
 		# need(input$spatdist, label="1"),
 		# need(input$spatagg, label="2"),
@@ -545,7 +545,7 @@ shinyServer(function(input, output, session) {
 
 
 			# sim.com might rather be set as a reactive ({ }) that is then called sim.com(). is this more efficient ?
-			session$userData$sim.com <- switch(input$sad_type,
+			tempsim.com <- switch(input$sad_type,
 							"lnorm"=sim_thomas_community(s_pool = input$S, n_sim = input$N, 
 								sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 								sad_type = input$sad_type, sad_coef=list(cv_abund=input$coef),
@@ -563,17 +563,20 @@ shinyServer(function(input, output, session) {
 								xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
 						)
 		} else {
-			session$userData$sim.com <- get(load(input$loaded_file$datapath))
+			tempsim.com <- get(load(input$loaded_file$datapath))
 		}
 
-		plot_layout(session$userData$sim.com, colors_for_individuals = color_palette_individuals())
-		session$userData$previous.sim.com <- session$userData$sim.com
-		
+		session$userData$previous.sim.com <- tempsim.com
+		tempsim.com
 	})
 	})
 		
-	
-
+   output$InteractivePlot <- renderPlot({
+      input$Restart
+      input$rarefaction_curves_loglog
+      
+		plot_layout(sim.com(), colors_for_individuals = color_palette_individuals())
+	})
 	
 	output$PreviousInteractivePlot <- renderPlot({
 		if(!input$keepInteractivePlot){
@@ -597,7 +600,7 @@ shinyServer(function(input, output, session) {
 	output$downloadData <- downloadHandler(
 		filename = function() {paste("community", sep="")},
 		content  = function(fname) {
-			sim.com <- session$userData$sim.com
+			sim.com <- sim.com()
 			save("sim.com", file=fname)
 		}
 	)
@@ -609,28 +612,28 @@ shinyServer(function(input, output, session) {
 		content  = switch(input$plot_saving_format,
 			# "pdf" = function(fname) {
 				# pdf(filename=fname, width=input$plot_saving_width, height=input$plot_saving_height)
-				# print(plot_layout(session$userData$sim.com))
+				# print(plot_layout(sim.com()))
 				# dev.off()
 			# },
 			# "svg" = function(fname) {
 				# svg(filename=fname, width=15, height=3)
-				# print(plot_layout(session$userData$sim.com))
+				# print(plot_layout(sim.com()))
 				# dev.off()
 			# },
 			"png" = function(fname) {
 				png(filename=fname, width=15, height=3, units="in", res=300)
-				print(plot_layout(session$userData$sim.com))
+				print(plot_layout(sim.com()))
 				dev.off()
 			},
 			"tiff" = function(fname) {
 				tiff(filename=fname, width=15, height=3, units="in", res=300)	# input$plot_saving_resolution
-				print(plot_layout(session$userData$sim.com))
+				print(plot_layout(sim.com()))
 				dev.off()
 			}
 		)
 		# content=function(fname) {
 			# png(filename=fname, width=1500, height=300)
-			# print(plot_layout(session$userData$sim.com))
+			# print(plot_layout(sim.com()))
 			# dev.off()
 		# }
 	)
@@ -646,8 +649,8 @@ shinyServer(function(input, output, session) {
 	output$community_summary_table <- renderTable({
 		input$Restart
 		data.frame(Community = "",
-						n_species = length(levels(session$userData$sim.com$census$species)),
-						n_individuals = nrow(session$userData$sim.com$census))
+						n_species = length(levels(sim.com()$census$species)),
+						n_individuals = nrow(sim.com()$census))
 	})
 	## Sampling parameters
 	
@@ -655,14 +658,14 @@ shinyServer(function(input, output, session) {
 	sampling_quadrats <- reactive({
 		input$new_sampling_button
 		
-		sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F, seed=seed_sampling())
+		sample_quadrats(comm=sim.com(), n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F, seed=seed_sampling())
 	})
 	
 	# previous_sampling_quadrats <- reactive({
 		# input$keepRarefactionCurvesPlot
 		
 		# isolate({
-			# sample_quadrats(comm=session$userData$sim.com, n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F)
+			# sample_quadrats(comm=sim.com(), n_quadrats=input$number_of_quadrats, quadrat_area=input$area_of_quadrats, method = input$sampling_method, avoid_overlap=T, plot=F)
 		# })
 	# })
 	
@@ -678,7 +681,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			# session$userData$sampled_quadrats <- sampling_quadrats()
 			quadrats_coordinates <- sampling_quadrats()$xy_dat
-			plot(session$userData$sim.com, main = "Community distribution", col= color_palette_individuals())
+			plot(sim.com(), main = "Community distribution", col= color_palette_individuals())
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
 								quadrats_coordinates$x + sqrt(input$area_of_quadrats),
@@ -704,7 +707,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			session$userData$previous_sampled_quadrats <- sampling_quadrats()
-			plot(session$userData$sim.com, main = "Community distribution", col= color_palette_individuals())
+			plot(sim.com(), main = "Community distribution", col= color_palette_individuals())
 			quadrats_coordinates <- session$userData$previous_sampled_quadrats$xy_dat
 			graphics::rect(quadrats_coordinates$x,
 								quadrats_coordinates$y,
@@ -777,7 +780,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			DT::datatable(
-				t(round(sapply(1:nrow(quadrats_coordinates), function(i) div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)), 3))[,c('n_species','n_endemics','shannon','simpson')],
+				t(round(sapply(1:nrow(quadrats_coordinates), function(i) div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sim.com())), 3))[,c('n_species','n_endemics','shannon','simpson')],
 				options=list(searching = FALSE, info = TRUE, sort = TRUE))
 		})
 	})
@@ -788,7 +791,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
-				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)
+				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sim.com())
 			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
 			funs <- list(min=min, max=max, mean=mean, sd=sd)
 			data.frame(Alpha_scale=colnames(temp), round(sapply(funs, mapply, temp),3))
@@ -802,7 +805,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			quadrats_coordinates <- session$userData$previous_sampled_quadrats$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
-				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=session$userData$sim.com)
+				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sim.com())
 			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
 			funs <- list(min=min, max=max, mean=mean, sd=sd)
 			data.frame(Alpha_scale=colnames(temp), round(sapply(funs, mapply, temp),3))
@@ -831,7 +834,7 @@ shinyServer(function(input, output, session) {
 		input$rarefaction_curves_loglog        # update plot when log axes rule change
 		
 		isolate({
-			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
+			plot(spec_sample_curve(sim.com(), method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
 			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(rarefaction_curves_list())) {		# verification aid
@@ -858,7 +861,7 @@ shinyServer(function(input, output, session) {
 		input$rarefaction_curves_loglog        # update plot when log axes rule change
 		
 		isolate({
-			plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
+			plot(spec_sample_curve(sim.com(), method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
 			lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
@@ -967,7 +970,7 @@ shinyServer(function(input, output, session) {
 		   input$rarefaction_curves_loglog        # update plot when log axes rule change
 		   
 			isolate({
-				plot(spec_sample_curve(session$userData$sim.com, method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
+				plot(spec_sample_curve(sim.com(), method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
 				lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
 				lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 				# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
@@ -1032,11 +1035,11 @@ shinyServer(function(input, output, session) {
 			# set.seed(33)
 			# withProgress(message = 'Simulating', value = 0, {	# style="old"
 				# session$userData$sap_test <- lapply(1:input$nrep_for_sampling_simulation, function(i) {
-					# quadrats <- sample_quadrats(session$userData$sim.com, avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
+					# quadrats <- sample_quadrats(sim.com(), avoid_overlap=T, quadrat_area=input$area_of_quadrats, n_quadrats=input$number_of_quadrats, plot=F)
 					# incProgress(1/input$nrep_for_sampling_simulation, detail = paste("Doing repetition", i))
 					# return(list(
 						# richness = sum(apply(quadrats$spec_dat, 2, sum)>0),
-						# standardised_difference = as.numeric(apply(quadrats$spec_dat,2,sum)/sum(quadrats$spec_dat) - table(session$userData$sim.com$census$species)/sum(table(session$userData$sim.com$census$species)))
+						# standardised_difference = as.numeric(apply(quadrats$spec_dat,2,sum)/sum(quadrats$spec_dat) - table(sim.com()$census$species)/sum(table(sim.com()$census$species)))
 					# ))
 					# }
 				# )
@@ -1527,7 +1530,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			values$saved_simulations$templist <- list(
 									sim_ID = session$userData$sim_ID,
-									community = session$userData$sim.com
+									community = sim.com()
 								)
 			names(values$saved_simulations)[names(values$saved_simulations) == "templist"] <- session$userData$sim_ID
 		})
@@ -1537,7 +1540,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			values$saved_simulations$templist <- list(
 									sim_ID = session$userData$sim_ID,
-									community = session$userData$sim.com,
+									community = sim.com(),
 									quadrats_area = input$area_of_quadrats,
 									sampled_quadrats = sampling_quadrats(),
 									rarefaction_curve_list = rarefaction_curves_list()
