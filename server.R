@@ -177,6 +177,97 @@ shinyServer(function(input, output, session) {
 	
 	
 
+	#########################################################################################################
+	# SAD -POPULATION SIMULATION TAB
+  
+  # update range for species richness, an observed species has minimum one individual
+	observe({
+		updateSliderInput(session, "sadS", min=5, max=input$sadN, value=input$sadS, step=5)
+	})
+
+	output$sadselect_sad_type <- renderUI({
+		selectizeInput("sadsad_type", label = p(Labels$sad_type, tags$style(type="text/css", "#sad_type_icon {vertical-align: top;}"),
+		                                     popify(bsButton("sad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
+		                                            title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom")), 
+		               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")
+	})
+						
+	  
+	output$sadCVslider <- renderUI({
+		switch(input$sadsad_type,
+			"lnorm"=sliderInput("coef", label = p("CV (abundance)", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                      popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                             title = Help$CVslider$title, content = Help$CVslider$content)),
+			                    value=1, min=0, max=5, step=0.1, ticks=F),
+			"geom"=sliderInput("coef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                     popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                            title = Help$CVslider$title, content = Help$CVslider$content)),
+			                   value=0.5,min=0,max=1,step=0.1, ticks=F),
+			"ls"=textInput("coef", label = p("Fisher's alpha parameter", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                 popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                        title = Help$CVslider$title, content = Help$CVslider$content)),
+			               value = 1)
+		)
+	})	
+	
+	
+	sadsim.sad <- reactive({
+	   input$sadRestart
+	   
+      sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type)
+	})
+	
+	output$sadsad_plots <- renderPlot({
+	   par(mfrow=c(1,2))
+	   plot(sadsim.sad(), method = "octave")
+		plot(sadsim.sad(), method = "rank")
+	})
+	
+
+	#########################################################################################################
+	# SPACE - DISTRIBUTION SIMULATION TAB
+  
+  # update range for species richness, an observed species has minimum one individual
+	observe({
+		updateSliderInput(session, "spaS", min=5, max=input$spaN, value=input$spaS, step=5)
+	})
+
+	output$spaselect_sad_type <- renderUI({
+		selectizeInput("spasad_type", label = p(Labels$sad_type, tags$style(type="text/css", "#sad_type_icon {vertical-align: top;}"),
+		                                     popify(bsButton("sad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
+		                                            title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom")), 
+		               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")
+	})
+						
+	  
+	output$spaCVslider <- renderUI({
+		switch(input$spasad_type,
+			"lnorm"=sliderInput("coef", label = p("CV (abundance)", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                      popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                             title = Help$CVslider$title, content = Help$CVslider$content)),
+			                    value=1, min=0, max=5, step=0.1, ticks=F),
+			"geom"=sliderInput("coef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                     popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                            title = Help$CVslider$title, content = Help$CVslider$content)),
+			                   value=0.5,min=0,max=1,step=0.1, ticks=F),
+			"ls"=textInput("coef", label = p("Fisher's alpha parameter", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                 popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                        title = Help$CVslider$title, content = Help$CVslider$content)),
+			               value = 1)
+		)
+	})	
+	
+	spasim.sad <- reactive({
+	   input$spaRestart
+	   
+      sim_sad(s_pool=input$spaS, n_sim=input$spaN, sad_type=input$spasad_type)
+	})
+	
+	output$spasad_plots <- renderPlot({
+	   par(mfrow=c(1,2))
+	   plot(spasim.sad(), method = "octave")
+		plot(spasim.sad(), method = "rank")
+	})
 	
 	
 	#########################################################################################################
@@ -184,7 +275,7 @@ shinyServer(function(input, output, session) {
   
   # update range for species richness, an observed species has minimum one individual
 	observe({
-		updateSliderInput(session, "S", min=5, max=input$N, value=5, step=5)
+		updateSliderInput(session, "S", max=input$N, value=input$S)
 	})
   # update the number of species in the drop down species list.
 	observe({
@@ -196,7 +287,7 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_mother_points"))	{
 			return()
 		} else {
-			selectizeInput("sad_type", label = p("SAD Type", tags$style(type="text/css", "#sad_type_icon {vertical-align: top;}"),
+			selectizeInput("sad_type", label = p(Labels$sad_type, tags$style(type="text/css", "#sad_type_icon {vertical-align: top;}"),
 			                                     popify(bsButton("sad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
 			                                            title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom")), 
 			               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")

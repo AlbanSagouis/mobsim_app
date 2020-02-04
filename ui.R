@@ -18,9 +18,54 @@ source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
+navbarPage("Visualization of biodiversity pattern", selected="SAD - Population simulation",
+           
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
-	tabPanel("MOBsim", 
+	
+	tabPanel("SAD - Population simulation",
+      sidebarLayout(
+         sidebarPanel(
+         	# Slider inputs
+            sliderInput("sadN", label = p("Number of individuals", tags$style(type="text/css", "#N_icon {vertical-align: top;}"),
+                                         bsButton("N_icon", label="", icon=icon("question-circle"), size="extra-small")), # , style="info"
+                         min=10, max=5000, value=1000, step=10, ticks=F),
+         	
+         	sliderInput("sadS", label = p("Species Richness", tags$style(type="text/css", "#S_icon {vertical-align: top;}"),
+         	                             bsButton("S_icon", label="", icon=icon("question-circle"), size="extra-small")),
+         	             min=5, max=500, value=5, step=5, ticks=F),
+         
+            uiOutput("sadselect_sad_type"),
+            uiOutput("sadCVslider"),
+            actionButton(inputId="sadRestart",label="Restart Simulation")
+         ),
+         mainPanel(
+            plotOutput("sadsad_plots")
+         )
+      )
+   ),
+	
+	tabPanel("Space - Distribution simulation",
+      sidebarLayout(
+         sidebarPanel(
+         	# Slider inputs
+            sliderInput("spaN", label = p("Number of individuals", tags$style(type="text/css", "#N_icon {vertical-align: top;}"),
+                                         bsButton("N_icon", label="", icon=icon("question-circle"), size="extra-small")), # , style="info"
+                         min=10, max=5000, value=1000, step=10, ticks=F),
+         	
+         	sliderInput("spaS", label = p("Species Richness", tags$style(type="text/css", "#S_icon {vertical-align: top;}"),
+         	                             bsButton("S_icon", label="", icon=icon("question-circle"), size="extra-small")),
+         	             min=5, max=500, value=5, step=5, ticks=F),
+         
+            uiOutput("spaselect_sad_type"),
+            uiOutput("spaCVslider"),
+            actionButton(inputId="spaRestart",label="Restart Simulation")
+         ),
+         mainPanel(
+            plotOutput("spasad_plots")
+         )
+      )
+   ),         
+	tabPanel("MOBsim - Simulation", 
       # tags$style(".popover{
       # container: body;
       #            }"),
