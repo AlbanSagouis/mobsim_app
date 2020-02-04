@@ -300,15 +300,12 @@ shinyServer(function(input, output, session) {
 								 species_ID = factor())
 
 	output$on_plot_selection <- renderPlot({
-	  if (is.null(input$method_type)) {
-			return()
-		} else {
-			if(input$method_type %in% c("click_for_mother_points","click_for_species_ranges")) {
-					color_vector <- rainbow(input$S)
-					par(mex=0.6, mar=c(3,3,0,0), cex.axis=0.8)
-					plot(x=values$DT$x, y=values$DT$y, col=color_vector[values$DT$species_ID], xlim=c(0,1), ylim=c(0,1), xlab="", ylab="", las=1, asp=1, pch=20)
-					abline(h=c(0,1), v=c(0,1), lty=2)
-			}
+		if(input$method_type %in% c("click_for_mother_points","click_for_species_ranges")) {
+				# color_vector <- rainbow(input$S)
+				color_vector <- color_palette_individuals()
+				par(mex=0.6, mar=c(3,3,0,0), cex.axis=0.8)
+				plot(x=values$DT$x, y=values$DT$y, col=color_vector[values$DT$species_ID], xlim=c(0,1), ylim=c(0,1), xlab="", ylab="", las=1, asp=1, pch=20)
+				abline(h=c(0,1), v=c(0,1), lty=2)
 		}
 	})
 
@@ -1463,7 +1460,13 @@ shinyServer(function(input, output, session) {
 	
 	output$simtab_output <- renderTable(simtab())
 	
-	
+	output$compplot_types_selection <- renderUI({
+	   if(input$compplot_style == "Split") {
+	      checkboxGroupInput(inputId="compplot_types", label="Plot types", choices=c("Community map", "Distance decay", "Rarefaction curve"), selected="Rarefaction curve")
+	   } else {
+	      return()
+	   }
+   })
 	
 	
 	

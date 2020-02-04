@@ -264,10 +264,10 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 				fluidRow(align="center", downloadButton("downloadSimulationList", "Download simulation data"))
 			),
 			column(width=3,
-				checkboxGroupInput(inputId="compplot_types", label="Plot types", choices=c("Community map", "Distance decay", "Rarefaction curve"), selected="Rarefaction curve")
+				radioButtons(inputId="compplot_style", label="Plot style", choices=c("Split","Stacked"), selected = "stacked")
 			),
 			column(width=3,
-				radioButtons(inputId="compplot_style", label="Plot style", choices=c("Split","Stacked"))
+				uiOutput("compplot_types_selection")
 			)
 		),
 		# actionButton("compare_selected_simulations","Compare selected simulations"),
