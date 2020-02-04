@@ -19,6 +19,7 @@ source("extras/code/rThomas_r.r", local = TRUE)
 source("extras/code/Sample_quadrats.R", local = TRUE)
 source("extras/code/Sim_Community.R", local = TRUE)
 source("extras/code/SAC_spatial.R", local = TRUE)
+source("extras/help/Help.R", local = TRUE)
 source("extras/help/Labels.R", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 
@@ -195,7 +196,10 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_mother_points"))	{
 			return()
 		} else {
-			selectizeInput("sad_type", "SAD Type", choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")
+			selectizeInput("sad_type", label = p("SAD Type", tags$style(type="text/css", "#sad_type_icon {vertical-align: top;}"),
+			                                     popify(bsButton("sad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                            title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom")), 
+			               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")
 		}					
 	})
 						
@@ -204,9 +208,18 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges") | is.null(input$sad_type))	
 			return()
 		switch(input$sad_type,
-			"lnorm"=sliderInput("coef", label = "CV(abundance), i.e. standard deviation of abundances divided by the mean abundance", value=1, min=0, max=5, step=0.1, ticks=F),
-			"geom"=sliderInput("coef", label = "Probability of success in each trial. 0 < prob <= 1", value=0.5,min=0,max=1,step=0.1, ticks=F),
-			"ls"=textInput("coef", label = "Fisher's alpha parameter", value = 1)
+			"lnorm"=sliderInput("coef", label = p("CV (abundance)", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                      popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                             title = Help$CVslider$title, content = Help$CVslider$content)),
+			                    value=1, min=0, max=5, step=0.1, ticks=F),
+			"geom"=sliderInput("coef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                     popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                            title = Help$CVslider$title, content = Help$CVslider$content)),
+			                   value=0.5,min=0,max=1,step=0.1, ticks=F),
+			"ls"=textInput("coef", label = p("Fisher's alpha parameter", tags$style(type="text/css", "#CVslider_icon {vertical-align: top;}"),
+			                                 popify(bsButton("CVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                        title = Help$CVslider$title, content = Help$CVslider$content)),
+			               value = 1)
 		)
 	})
 
@@ -214,7 +227,10 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
-			textInput(inputId = "spatagg", label = Labels$spatagg, value = 0.1)
+			textInput(inputId = "spatagg", label = p(Labels$spatagg, tags$style(type="text/css", "#spatagg_icon {vertical-align: top;}"),
+			                                         popify(bsButton("spatagg_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                                title = Help$spatagg$title, content = Help$spatagg$content)),
+			          value = 0.1)
 		}			
 	})
 	
@@ -248,7 +264,10 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
-			selectizeInput(inputId="spatdist", Labels$spatdist, choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
+			selectizeInput(inputId="spatdist", p(Labels$spatdist, tags$style(type="text/css", "#spatdist_icon {vertical-align: top;}"),
+			                                     popify(bsButton("spatdist_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                            title = Help$spatdist$title, content = Help$spatdist$content)),
+			               choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
 		}					
 	})
 
@@ -256,7 +275,10 @@ shinyServer(function(input, output, session) {
 		if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
 			return()
 		} else {
-			textInput(inputId="spatcoef",label=Labels$spatcoef, value="0")
+			textInput(inputId="spatcoef",label=p(Labels$spatcoef, tags$style(type="text/css", "#spatcoef_icon {vertical-align: top;}"),
+			                                     popify(bsButton("spatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                            title = Help$spatcoef$title, content = Help$spatcoef$content)),
+			          value="0")
 		}					
 	})
 
@@ -426,7 +448,10 @@ shinyServer(function(input, output, session) {
 		if (input$method_type != "click_for_species_ranges")	{
 			return()
 		} else {
-			fileInput(inputId="loaded_ranges", label="Choose a data.frame of ranges", multiple = FALSE,
+			fileInput(inputId="loaded_ranges", label=p("Choose a data.frame of ranges", tags$style(type="text/css", "#species_range_uploading_tool_icon {vertical-align: top;}"),
+			                                           popify(bsButton("species_range_uploading_tool_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                                  title = Help$species_range_uploading_tool$title, content = Help$species_range_uploading_tool$content, placement = "bottom")),
+			         multiple = FALSE,
 						accept = c("text/csv",
                          "text/comma-separated-values,text/plain",
                          ".csv"), width = NULL,
@@ -461,7 +486,10 @@ shinyServer(function(input, output, session) {
 		if (input$method_type != "uploading_community_data")	{
 			return()
 		} else {
-			fileInput(inputId="loaded_file", label="Choose rData community File", multiple = FALSE,
+			fileInput(inputId="loaded_file", label=p("Choose rData community File", tags$style(type="text/css", "#community_uploading_tool_icon {vertical-align: top;}"),
+			                                         popify(bsButton("community_uploading_tool_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                                title = Help$community_uploading_tool$title, content = Help$community_uploading_tool$content, placement = "bottom")),
+			         multiple = FALSE,
 						accept = "", width = NULL,
 						buttonLabel = "Browse...", placeholder = "No file selected")
 		}
@@ -1078,13 +1106,23 @@ shinyServer(function(input, output, session) {
 	## Parameters
 	# update range for species richness, an observed species has minimum one individual
 	observe({
-		updateSliderInput(session, "sbsS", min=5, max=input$sbsN, value=50, step=5)
+		updateSliderInput(session, "sbsS", min=5, max=input$sbsN, value=50, step=5)   # does not work? app freezes when N value is set to a smaller value than S
 	})
+	
 	output$sbsCVslider <- renderUI({
 		switch(input$sbssad_type,
-			"lnorm"=sliderInput("sbscoef", label="CV(abundance), i.e. standard deviation of abundances divided by the mean abundance",value=1, min=0, max=5, step=0.1, ticks=F),
-			"geom"=sliderInput("sbscoef", label="Probability of success in each trial. 0 < prob <= 1", value=0.5, min=0, max=1, step=0.1, ticks=F),
-			"ls"=textInput("sbscoef", label="Fisher's alpha parameter", value=1)
+			"lnorm"=sliderInput("sbscoef", label=p("CV (abundance)", tags$style(type="text/css", "#sbsCVslider_icon {vertical-align: top;}"),
+			                                      popify(bsButton("sbsCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                             title = Help$CVslider$title, content = Help$CVslider$content)),
+			                    value=1, min=0, max=5, step=0.1, ticks=F),
+			"geom"=sliderInput("sbscoef", label=p("Probability of success in each trial. 0 < prob <= 1", tags$style(type="text/css", "#sbsCVslider_icon {vertical-align: top;}"),
+			                                     popify(bsButton("sbsCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                            title = Help$CVslider$title, content = Help$CVslider$content)),
+			                   value=0.5, min=0, max=1, step=0.1, ticks=F),
+			"ls"=textInput("sbscoef", label=p("Fisher's alpha parameter", tags$style(type="text/css", "#sbsCVslider_icon {vertical-align: top;}"),
+			                                 popify(bsButton("sbsCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
+			                                        title = Help$CVslider$title, content = Help$CVslider$content)),
+			               value=1)
 		)
 	})
 	
@@ -1634,6 +1672,28 @@ shinyServer(function(input, output, session) {
 	rarefaction_curves_loglog <- reactive({
 	   paste(input$rarefaction_curves_loglog, collapse = "")
 	})
+	
+	
+	
+	# HELP ICONS
+
+	output$simulation_seed_icon <- renderUI(icon("question-circle"))
+	output$sampling_seed_icon <- renderUI(icon("question-circle"))
+	output$area_of_quadrats_icon <- renderUI(icon("question-circle"))
+	
+	output$keep_step_icon <- renderUI(icon("question-circle"))
+	
+	output$color_palette_icon <- renderUI(icon("question-circle"))
+	output$rarefaction_curves_plot_icon <- renderUI(icon("question-circle"))
+	output$sampling_plot_icon <- renderUI(icon("question-circle"))
+	
+	output$bigtable_output_icon <- renderUI(icon("question-circle"))
+	output$downloadSimulationTable_icon <- renderUI(icon("question-circle"))
+	output$downloadSimulationList_icon <- renderUI(icon("question-circle"))
+	
+	
+	
+	
 	
 	
 	

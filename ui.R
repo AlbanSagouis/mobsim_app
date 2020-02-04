@@ -11,43 +11,47 @@ library(shiny)
 library(shinyBS)
 # library(mobsim)
 library(DT)
+# library(darkmode)  # not great
 source("extras/help/Help.R", local = TRUE)
 source("extras/help/Labels.R", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
+navbarPage("Visualization of biodiversity pattern", selected="MOBsim",
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	tabPanel("MOBsim", 
+      # tags$style(".popover{
+      # container: body;
+      #            }"),
 
 		fluidPage(
 			fluidRow(
 				column(width=3,
 					# Slider inputs
-					sliderInput("N", "Number of individuals",
-									min=10, max=5000, value=1000, step=10, ticks=F),
+		         sliderInput("N", label = p("Number of individuals", tags$style(type="text/css", "#N_icon {vertical-align: top;}"),
+		                                      bsButton("N_icon", label="", icon=icon("question-circle"), size="extra-small")), # , style="info"
+		                      min=10, max=5000, value=1000, step=10, ticks=F),
 					
-					sliderInput("S", "Species Richness",
-									min=5, max=500, value=5, step=5, ticks=F),
+					sliderInput("S", label = p("Species Richness", tags$style(type="text/css", "#S_icon {vertical-align: top;}"),
+					                             bsButton("S_icon", label="", icon=icon("question-circle"), size="extra-small")),
+					             min=5, max=500, value=5, step=5, ticks=F),
 					
-					selectizeInput("method_type", label="Method", choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "Click for species ranges"="click_for_species_ranges", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
+               selectizeInput("method_type", label=p("Method", tags$style(type="text/css", "#method_type_icon {vertical-align: top;}"),
+                                                      bsButton("method_type_icon", label="", icon=icon("question-circle"), size="extra-small")),
+                              choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "Click for species ranges"="click_for_species_ranges", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
 					
 					# checkboxInput("sample_setting_button", "Sample setting", value=FALSE)
 				),
 				
 				column(width=3,
-					uiOutput("select_sad_type"),
-					uiOutput("CVslider"),
+               uiOutput("select_sad_type"),
+			      uiOutput("CVslider"),
 
-					uiOutput("text_spat_agg"),
-					icon("question-circle"),
-											
-					uiOutput("spatdist"),
-					icon("question-circle"),
-					uiOutput("spatcoef"),
-					icon("question-circle"),
+			      uiOutput("text_spat_agg"),
+			      uiOutput("spatdist"),
 					
+					uiOutput("spatcoef"),
 					uiOutput("community_uploading_tool")
 				),
 				
@@ -57,6 +61,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 						click = "plot_click",
 						brush = brushOpts(id="plot_brush", resetOnNew=TRUE)
 					),
+					uiOutput("species_range_uploading_tool_icon"),
 					uiOutput("species_range_uploading_tool")
 					# fluidRow(align="center", actionButton(inputId="resetPlot", label="Clear plot"))
 						# column(width=6, actionButton(inputId="resetBrush", label="Reset brush"))
@@ -105,31 +110,28 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 
 		),
 
-		bsPopover(id="N", title = Help$N$title, content=Help$N$content, placement = "bottom", trigger = "hover", options = NULL),
-		bsPopover(id="S", title = Help$S$title, content=Help$S$content, placement = "bottom", trigger = "hover", options = NULL),
-		bsPopover(id="select_sad_type", title = Help$select_sad_type$title, content = Help$select_sad_type$content),
-		bsPopover(id="CVslider", title = Help$CVslider$title, content = Help$CVslider$content),
-		bsPopover(id="text_spat_agg", title = Help$spatagg$title, content = Help$spatagg$content),
-		bsPopover(id="spatdist", title = Help$spatdist$title, content = Help$spatdist$content, placement = "bottom", trigger = "hover", options = NULL),
-		bsPopover(id="spatcoef", title = Help$spatcoef$title, content = Help$spatcoef$content),
-		bsPopover(id="method_type", title= Help$method_type$title, content = Help$method_type$content, placement="bottom"),
-		bsPopover(id="community_uploading_tool", title = Help$community_uploading_tool$title, content = Help$community_uploading_tool$content),
-		bsPopover(id="species_range_uploading_tool", title = Help$species_range_uploading_tool$title, content = Help$species_range_uploading_tool$content)
+		bsPopover(id="N_icon", title = Help$N$title, content=Help$N$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="S_icon", title = Help$S$title, content=Help$S$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="method_type_icon", title= Help$method_type$title, content = Help$method_type$content, placement="bottom", options = list(container = "body"))
 		
 	),
 	
 	tabPanel("Sampling",
-		tableOutput("community_summary_table"),
-		column(width=4, selectInput("sampling_method", label="Sampling Method", choices=c("random","grid"), selected="random")), #,"transect"
-		column(width=4, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
-		column(width=4, numericInput("area_of_quadrats", label="Area of quadrats", value=0.005, min=0.00001, max=1, step=0.005)),
+      fluidRow(
+         column(width = 3, tableOutput("community_summary_table")),
+         column(width = 3, selectInput("sampling_method", label="Sampling Method", choices=c("random","grid"), selected="random")), #,"transect"
+         column(width = 3, numericInput("number_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1)),
+         column(width = 3, numericInput("area_of_quadrats", label=p("Area of quadrats", tags$style(type="text/css", "#area_of_quadrats_icon {vertical-align: top;}"),
+		                                                         bsButton("area_of_quadrats_icon", label="", icon=icon("question-circle"), size="extra-small")),
+		                             value=0.005, min=0.00001, max=1, step=0.005))
+		   ),
 		
 		# column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
 		# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
-		column(width=6,
-			actionButton("new_sampling_button", label="New sampling"),
-			actionButton("keepRarefactionCurvesPlot", label='Keep this sampling design')
-		),	#, style = "margin-top: 25px;"
+		fluidRow(align = "center",
+		   actionButton("new_sampling_button", label="New sampling"),
+		   actionButton("keepRarefactionCurvesPlot", label='Keep this sampling design')
+		),
 		
 		fluidRow(
 			# Simulation
@@ -158,9 +160,9 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 			)
 		),
 		
-		bsPopover(id = "area_of_quadrats", title = Help$area_of_quadrats$title, content = Help$area_of_quadrats$content),
+		bsPopover(id = "area_of_quadrats_icon", title = Help$area_of_quadrats$title, content = Help$area_of_quadrats$content, trigger= "hover"),
 		bsPopover(id = "rarefaction_curves_plot", title = Help$rarefaction_curves_plot$title, content = Help$rarefaction_curves_plot$content, trigger = "hover"),
-		bsPopover(id = "sampling_plot", title = Help$sampling_plot$title, content = Help$sampling_plot$content)
+		bsPopover(id = "sampling_plot", title = Help$sampling_plot$title, content = Help$sampling_plot$content, placement = "top")
 	),
 	
 	
@@ -175,21 +177,36 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 				fluidRow(
 					column(width=6,
 						# number of species
-						numericInput("sbsS", "Species Richness", min=5, max=500, value=50, step=5)
+						numericInput("sbsS", label = p("Species Richness", tags$style(type="text/css", "#sbsS_icon {vertical-align: top;}"),
+						                               bsButton("sbsS_icon", label="", icon=icon("question-circle"), size="extra-small")),
+						             min=5, max=500, value=50, step=5)
 					),
 					column(width=6,
 						# number of individuals
-						numericInput("sbsN", "Number of individuals", min=10, max=5000, value=1000, step=10)
+						numericInput("sbsN", label = p("Number of individuals", tags$style(type="text/css", "#sbsN_icon {vertical-align: top;}"),
+						                               bsButton("sbsN_icon", label="", icon=icon("question-circle"), size="extra-small")),
+						             min=10, max=5000, value=1000, step=10)
 					)
 				),
-				selectizeInput("sbssad_type", "SAD Type", choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls")),
+				selectizeInput("sbssad_type", label = p("SAD Type", tags$style(type="text/css", "#sbssad_type_icon {vertical-align: top;}"),
+				                                        bsButton("sbssad_type_icon", label="", icon=icon("question-circle"), size="extra-small")),
+				               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls")),
 				uiOutput("sbsCVslider"),
 
-				selectizeInput(inputId="sbsspatdist", Labels$spatdist, choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster")),
-				helpText("Number of mother points per species OR number of individuals per cluster."),
-				textInput(inputId="sbsspatcoef",label = Labels$spatcoef, value="0"),
-				textInput(inputId="sbsspatagg", label = Labels$spatagg, value = 0.1),
-				textInput("sbssimulation_seed", label = "Simulation seed", value="Not specified"),
+				selectizeInput(inputId="sbsspatdist", label = p(Labels$spatdist, tags$style(type="text/css", "#sbsspatdist_icon {vertical-align: top;}"),
+				                                                bsButton("sbsspatdist_icon", label="", icon=icon("question-circle"), size="extra-small")),
+				               choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster")),
+				# helpText("Number of mother points per species OR number of individuals per cluster."),
+				textInput(inputId="sbsspatcoef",label = p(Labels$spatcoef, tags$style(type="text/css", "#sbsspatcoef_icon {vertical-align: top;}"),
+				                                        bsButton("sbsspatcoef_icon", label="", icon=icon("question-circle"), size="extra-small")),
+				          value="0"),
+				textInput(inputId="sbsspatagg", label = p(Labels$spatagg, tags$style(type="text/css", "#sbsspatagg_icon {vertical-align: top;}"),
+				                                        bsButton("sbsspatagg_icon", label="", icon=icon("question-circle"), size="extra-small")),
+				          value = 0.1),
+				textInput("sbssimulation_seed", label = p("Simulation seed", tags$style(type="text/css", "#sbssimulation_seed_icon {vertical-align: top;}"),
+				                                        popify(bsButton("sbssimulation_seed_icon", label="", icon=icon("question-circle"), size="extra-small"),
+				                                               title = Help$simulation_seed$title, content=Help$simulation_seed$content, trigger = "click")),
+				          value="Not specified"),
 				# verbatimTextOutput("debugging_seed"),
 				
 				# Restart action button
@@ -205,13 +222,17 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 					),
 					column(width=4,
 						# numericInput("sbssampling_seed", label="Sampling seed", value=NULL, min=1, max=2^15, step=1)
-						textInput("sbssampling_seed", label="Sampling seed", value="Not specified")
+						textInput("sbssampling_seed", label=p("Sampling seed", tags$style(type="text/css", "#sbssampling_seed_icon {vertical-align: top;}"),
+						                                      popify(bsButton("sbssampling_seed_icon", label="", icon=icon("question-circle"), size="extra-small"),
+						                                             title = Help$simulation_seed$title, content=Help$simulation_seed$content)),
+						          value="Not specified")
 					)
 				),
 				actionButton("sbsnew_sampling_button", label="Restart sampling"),
 				# Next step
-				actionButton("sbskeep_step", label="Next step"),
-				selectizeInput(inputId="sbsplot_choice", "Plot type", choices = c("Distance decay"="distance_decay_choice", "Rarefaction curve"="rarefaction_curve_choice"))
+				actionButton("sbskeep_step", label=p("Next step", tags$style(type="text/css", "#sbskeep_step_icon {vertical-align: top;}"),
+				                                     bsButton("sbskeep_step_icon", label="", icon=icon("question-circle"), size="extra-small"))),
+				selectizeInput(inputId="sbsplot_choice", label ="Plot type", choices = c("Rarefaction curve"="rarefaction_curve_choice", "Distance decay"="distance_decay_choice"))
 			),
 			mainPanel(
 			# plot of the community
@@ -219,14 +240,14 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 				uiOutput("sbsfirst_step")
 			)
 		),
-		bsPopover(id="sbsS", title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "hover", options = NULL),
-		bsPopover(id="sbsN", title =  Help$N$title, content =  Help$N$content, placement = "bottom", trigger = "hover", options = NULL),
-		bsPopover(id="sbsspatagg", title = Help$spatagg$title, content = Help$spatagg$content),
-		bsPopover(id="sbsspatdist", title = Help$spatdist$title, content = Help$spatdist$content, placement = "bottom", trigger = "hover", options = NULL),
-		bsPopover(id="sbsspatcoef", title=Help$spatcoef$title, content=Help$spatcoef$content),
-		bsPopover(id="sbssimulation_seed", title = Help$simulation_seed$title, content=Help$simulation_seed$content),
-		bsPopover(id="sbssampling_seed", title = Help$sampling_seed$title, content=Help$sampling_seed$content),
-		bsPopover(id="sbskeep_step", title = Help$keep_step$title, content = Help$keep_step$content, placement = "bottom", trigger = "hover", options = NULL)
+		bsPopover(id="sbsS_icon", title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="sbsN_icon", title =  Help$N$title, content =  Help$N$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="sbsspatagg_icon", title = Help$spatagg$title, content = Help$spatagg$content),
+		bsPopover(id="sbsspatdist_icon", title = Help$spatdist$title, content = Help$spatdist$content, placement = "bottom", trigger = "hover", options = NULL),
+		bsPopover(id="sbsspatcoef_icon", title=Help$spatcoef$title, content=Help$spatcoef$content),
+		# bsPopover(id="sbssimulation_seed_icon", title = Help$simulation_seed$title, content=Help$simulation_seed$content),
+		# bsPopover(id="sbssampling_seed_icon", title = Help$sampling_seed$title, content=Help$sampling_seed$content),
+		bsPopover(id="sbskeep_step_icon", title = Help$keep_step$title, content = Help$keep_step$content, placement = "bottom", trigger = "hover", options = NULL)
 	),
 	
 	
@@ -264,10 +285,11 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
 	tabPanel("Plot parameters",
    	sidebarLayout(
    	   sidebarPanel(
+   	      # with_darkmode(),
             selectInput("color_palette", label="Choose color palette", choices=palette_tab$palette_name, selected = "brewer.paired"),
             radioButtons("dark_background", label = "Plot background color (Not implemented yet)", choices = c("Light","Dark")),
             checkboxInput("CBF_test", label = "Show Colorblindness Suitability"),
-            textOutput("clicktext"),
+            # textOutput("clicktext"),
             checkboxGroupInput(inputId = "rarefaction_curves_loglog", label = "Logarithmic axis", choices = c("x","y"), selected = c("x","y"), inline=TRUE)
    	   ),
    	   mainPanel(
@@ -275,7 +297,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Plot patameters",
    	      column(width=6, plotOutput("CBF_test_plot"))
          )
       ),
-	   bsPopover(id="color_palette", title = Help$color_palette$title, content = Help$color_palette$content, placement = "top", trigger = "hover", options = NULL)
+	   bsPopover(id="color_palette", title = Help$color_palette$title, content = Help$color_palette$content, placement = "right", trigger = "hover", options = NULL)
 	)
 	
 	# tabPanel("Comparison",
