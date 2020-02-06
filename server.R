@@ -207,9 +207,9 @@ shinyServer(function(input, output, session) {
 	   input$sadRestart
 	   
 	   switch(input$sadsad_type,
-         "lnorm" = sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef)),
-         "geom" = sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(prob=input$sadcoef)),
-         "ls" = sim_sad(s_pool=NA, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(N=input$sadN, alpha=as.numeric(input$sadcoef)))
+         "lnorm" = sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef), fix_s_sim = TRUE),
+         "geom" = sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(prob=input$sadcoef), fix_s_sim = TRUE),
+         "ls" = sim_sad(s_pool=NA, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(N=input$sadN, alpha=as.numeric(input$sadcoef)), fix_s_sim = TRUE)
       )
 	})
 	
@@ -246,20 +246,46 @@ shinyServer(function(input, output, session) {
 	})	
 	
 	
-	spasim.sad <- reactive({
+	spasim.com <- reactive({
 	   input$spaRestart
 	   
+	   spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spaspatagg), ",")))
+	   spatcoef_num <- as.numeric(unlist(strsplit(trimws(input$spaspatcoef), ",")))
+	   
+	   if(input$spaspatdist=="n.mother") n.mother <- spatcoef_num else n.mother <- NA
+	   if(input$spaspatdist=="n.cluster") n.cluster <- spatcoef_num else n.cluster <- NA
+	   
+	   simulation_parameters <- list(mother_points = n.mother,
+                                   cluster_points = n.cluster,
+                                   xmother = NA,
+                                   ymother = NA,
+                                   xrange = c(0,1),
+                                   yrange = c(0,1))
+
 	   switch(input$spasad_type,
-	          "lnorm" = sim_sad(s_pool=input$spaS, n_sim=input$spaN, sad_type=input$spasad_type, sad_coef = list(cv_abund=input$spacoef)),
-	          "geom" = sim_sad(s_pool=input$spaS, n_sim=input$spaN, sad_type=input$spasad_type, sad_coef = list(prob=input$spacoef)),
-	          "ls" = sim_sad(s_pool=NA, n_sim=input$spaN, sad_type=input$spasad_type, sad_coef = list(N=input$spaN, alpha=as.numeric(input$spacoef)))
+	          "lnorm"=sim_thomas_community(s_pool = input$spaS, n_sim = input$spaN, 
+	                                       sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+	                                       sad_type = input$spasad_type, sad_coef=list(cv_abund=input$spacoef),
+	                                       fix_s_sim = T, seed = NULL,
+	                                       xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+	          "geom"=sim_thomas_community(s_pool = input$spaS, n_sim = input$spaN,
+	                                      sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+	                                      sad_type = input$spasad_type, sad_coef=list(prob=input$spacoef),
+	                                      fix_s_sim = T, seed = NULL,
+	                                      xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+	          "ls"=sim_thomas_community(s_pool = NA, n_sim = input$spaN,
+	                                    sad_type = input$spasad_type, sad_coef=list(N=input$spaN,alpha=as.numeric(input$spacoef)),
+	                                    sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+	                                    fix_s_sim = T, seed = NULL,
+	                                    xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
 	   )
 	})
 	
 	output$spasad_plots <- renderPlot({
 	   par(mfrow=c(1,2))
-	   plot(spasim.sad(), method = "octave")
-		plot(spasim.sad(), method = "rank")
+		plot(community_to_sad(spasim.com()), method = "rank")
+		plot(spasim.com(), main = "Community map")
+		
 	})
 	
 	
@@ -362,7 +388,7 @@ shinyServer(function(input, output, session) {
 			textInput(inputId="spatcoef",label=p(Labels$spatcoef, tags$style(type="text/css", "#spatcoef_icon {vertical-align: top;}"),
 			                                     popify(bsButton("spatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
 			                                            title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
-			          value="0")
+			          value="1")
 		}					
 	})
 

@@ -18,7 +18,7 @@ source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="SAD - Population simulation",
+navbarPage("Visualization of biodiversity pattern", selected="Space - Distribution simulation",
            
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	
@@ -38,7 +38,9 @@ navbarPage("Visualization of biodiversity pattern", selected="SAD - Population s
          
             selectizeInput("sadsad_type", label = p(Labels$sad_type, tags$style(type="text/css", "#sadsad_type_icon {vertical-align: top;}"),
 		                                     popify(bsButton("sadsad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
-		                                            title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom", trigger = "focus")), 
+		                                            title = Help$select_sad_type$title,
+		                                            content = Help$select_sad_type$content,
+		                                            placement = "bottom", trigger = "focus")), 
 		               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm"),
             uiOutput("sadCVslider"),
             actionButton(inputId="sadRestart",label="Restart Simulation")
@@ -52,29 +54,59 @@ navbarPage("Visualization of biodiversity pattern", selected="SAD - Population s
 	tabPanel("Space - Distribution simulation",
       sidebarLayout(
          sidebarPanel(
-         	# Slider inputs
-            sliderInput("spaN", label = p("Number of individuals", tags$style(type="text/css", "#spaN_icon {vertical-align: top;}"),
-                                         popify(bsButton("spaN_icon", label="", icon=icon("question-circle"), size="extra-small"),
-                                                title = Help$N$title, content = Help$N$content, placement = "bottom", trigger = "focus")),
-                         min=10, max=5000, value=1000, step=10, ticks=F),
+         	fluidRow(
+               column(width = 6, 
+                      sliderInput("spaN", label = p("Number of individuals", tags$style(type="text/css", "#spaN_icon {vertical-align: top;}"),
+                                            popify(bsButton("spaN_icon", label="", icon=icon("question-circle"), size="extra-small"),
+                                                   title = Help$N$title, content = Help$N$content, placement = "bottom", trigger = "focus")),
+                            min=10, max=5000, value=1000, step=10, ticks=F)
+               ),
+            	column(width = 6,
+               	sliderInput("spaS", label = p("Species Richness", tags$style(type="text/css", "#spaS_icon {vertical-align: top;}"),
+               	                             popify(bsButton("spaS_icon", label="", icon=icon("question-circle"), size="extra-small"),
+               	                                    title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "focus")),
+               	             min=5, max=500, value=5, step=5, ticks=F)
+         	   )
+         	),
+         	fluidRow(
+         	   column(width = 6,
+         	          selectizeInput("spasad_type", label = p(Labels$sad_type,
+         	                                                  tags$style(type="text/css", "#spasad_type_icon {vertical-align: top;}"),
+         	                                                  popify(bsButton("spasad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
+         	                                                         title = Help$select_sad_type$title,
+         	                                                         content = Help$select_sad_type$content,
+         	                                                         placement = "bottom", trigger = "focus")),
+         	                         choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")
+         	   ),
+         	   column(width = 6, uiOutput("spaCVslider"))
+         	),
+            actionButton(inputId="spaRestart",label="Restart Simulation"),
          	
-         	sliderInput("spaS", label = p("Species Richness", tags$style(type="text/css", "#spaS_icon {vertical-align: top;}"),
-         	                             popify(bsButton("spaS_icon", label="", icon=icon("question-circle"), size="extra-small"),
-         	                                    title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "focus")),
-         	             min=5, max=500, value=5, step=5, ticks=F),
-         
-            selectizeInput("spasad_type", label = p(Labels$sad_type, tags$style(type="text/css", "#spasad_type_icon {vertical-align: top;}"),
-                                                    popify(bsButton("spasad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
-                                                           title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom", trigger = "focus")), 
-                           choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm"),
-            uiOutput("spaCVslider"),
-            actionButton(inputId="spaRestart",label="Restart Simulation")
+         	textInput(inputId = "spaspatagg", label = p(Labels$spatagg, tags$style(type="text/css", "#spaspatagg_icon {vertical-align: top;}"),
+         	                                         popify(bsButton("spaspatagg_icon", label="", icon=icon("question-circle"), size="extra-small"),
+         	                                                   title = Help$spatagg$title,
+         	                                                   content = Help$spatagg$content, trigger = "focus")), value = 0.1),
+         	selectizeInput(inputId="spaspatdist", p(Labels$spatdist, tags$style(type="text/css", "#spaspatdist_icon {vertical-align: top;}"),
+         	                                         popify(bsButton("spaspatdist_icon", label="", icon=icon("question-circle"), size="extra-small"),
+         	                                                  title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")),
+         	                     choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother"),
+         	
+         	textInput(inputId="spaspatcoef",label=p(Labels$spatcoef, tags$style(type="text/css", "#spaspatcoef_icon {vertical-align: top;}"),
+         	                                         popify(bsButton("spaspatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
+         	                                                  title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
+         	                value="1")
          ),
+         
+         
          mainPanel(
             plotOutput("spasad_plots")
          )
       )
-   ),         
+   ),
+	
+	
+	
+	
 	tabPanel("MOBsim - Simulation", 
       # tags$style(".popover{
       # container: body;
