@@ -941,6 +941,7 @@ shinyServer(function(input, output, session) {
 	output$rarefaction_curves_plot <- renderPlot({
 		input$Restart
 		input$new_sampling_button
+		input$rarefaction_curves_plot_brush	# zooming in and out
 		input$rarefaction_curves_plot_dblclick	# zooming in and out
 		# input$rarefaction_curves_plot_click	# highlighting individual site
 		input$sampling_plot_click_info			# highlighting individual site
@@ -964,10 +965,13 @@ shinyServer(function(input, output, session) {
 			# lines(rarefaction_curves_list()[[rarefaction_curves_hover_info()]], lwd=4, col="forestgreen")
 		# }
 	})
+	
+	
 
 	output$previous_rarefaction_curves_plot <- renderPlot({
 		input$Restart
 		input$keepRarefactionCurvesPlot
+		input$rarefaction_curves_plot_brush	   # zooming in and out
 		input$rarefaction_curves_plot_dblclick	# zooming in and out
 		# input$rarefaction_curves_plot_hover	# highlighting individual site
 		# input$sampling_plot_click_info			# highlighting individual site
@@ -993,21 +997,16 @@ shinyServer(function(input, output, session) {
 	})
 
 	### Zooming inside the rarefaction curve plot
-		# brush on the desired area and double-click
-		# When a double-click happens, check if there's a brush on the plot.
-		# If so, zoom to the brush bounds; if not, reset the zoom.
-		## Desired behaviour: brush to zoom in, double click to zoom out.
-	observeEvent(input$rarefaction_curves_plot_dblclick, {
-		brush <- input$rarefaction_curves_plot_brush
-		if (!is.null(brush)) {
-			ranges$x <- c(brush$xmin, brush$xmax)
-			ranges$y <- c(brush$ymin, brush$ymax)
-		} else {
-			ranges$x <- NULL
-			ranges$y <- NULL
-		}
+		# brush to zoom in, double click to zoom out.
+	observeEvent(input$rarefaction_curves_plot_brush, {
+		ranges$x <- c(input$rarefaction_curves_plot_brush$xmin, input$rarefaction_curves_plot_brush$xmax)
+		ranges$y <- c(input$rarefaction_curves_plot_brush$ymin, input$rarefaction_curves_plot_brush$ymax)
 	})
 	
+	observeEvent(input$rarefaction_curves_plot_dblclick, {
+      ranges$x <- NULL   # sum(sampling_quadrats()$spec_dat)
+      ranges$y <- NULL   # as.numeric(sim.com()$n_species)
+	})
 	### Highlighting sampling sites rarefaction curve and table line and quadrat
 	#### sampling plot
 		# what if there is overlap?
@@ -1077,7 +1076,8 @@ shinyServer(function(input, output, session) {
 		})
 				
 		output$previous_rarefaction_curves_plot <- renderPlot({
-			input$rarefaction_curves_plot_dblclick	# zooming in and out
+		   input$rarefaction_curves_plot_brush	   # zooming in and out
+		   input$rarefaction_curves_plot_dblclick	# zooming in and out
 			# input$rarefaction_curves_plot_hover	# highlighting individual site
 			# input$sampling_plot_click_info			# highlighting individual site
 		   input$rarefaction_curves_loglog        # update plot when log axes rule change
