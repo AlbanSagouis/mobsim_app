@@ -19,8 +19,8 @@ source("extras/code/rThomas_r.r", local = TRUE)
 source("extras/code/Sample_quadrats.R", local = TRUE)
 source("extras/code/Sim_Community.R", local = TRUE)
 source("extras/code/SAC_spatial.R", local = TRUE)
-source("extras/help/Help.R", local = TRUE)
-source("extras/help/Labels.R", local = TRUE)
+source("extras/help/Help.r", local = TRUE)
+source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 
 bigtable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
@@ -38,6 +38,9 @@ shinyServer(function(input, output, session) {
 	values <- reactiveValues()
 	
 	# Plotting preferences
+	spacolor_palette_individuals <- reactive({
+	   do.call(color_palette(), list(n=input$spaS))
+	})
 	color_palette_individuals <- reactive({
       do.call(color_palette(), list(n=input$S))
 	})
@@ -182,7 +185,7 @@ shinyServer(function(input, output, session) {
   
   # update range for species richness, an observed species has minimum one individual
 	observeEvent(input$sadN,{
-		updateSliderInput(session, "sadS", min=5, max=input$sadN, value=input$sadS, step=5)
+		updateSliderInput(session, "sadS", max=input$sadN, value=input$sadS)
 	})
 
 	output$sadCVslider <- renderUI({
@@ -234,14 +237,16 @@ shinyServer(function(input, output, session) {
 	                                                   popify(bsButton("spaCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
 	                                                          title = Help$CVsliderLnorm$title, content = Help$CVsliderLnorm$content, trigger = "focus")),
 	                              value=1, min=0, max=5, step=0.1, ticks=F),
+	          
 	          "geom"=sliderInput("spacoef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type="text/css", "#spaCVslider_icon {vertical-align: top;}"),
 	                                                  popify(bsButton("spaCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
 	                                                         title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
 	                             value=0.5,min=0,max=1,step=0.05, ticks=F),
+	          
 	          "ls"=textInput("spacoef", label = p("Fisher's alpha parameter", tags$style(type="text/css", "#spaCVslider_icon {vertical-align: top;}"),
 	                                              popify(bsButton("spaCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
 	                                                     title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")),
-	                         value = 1)
+	                         value = 10)
 	   )
 	})	
 	
@@ -281,19 +286,94 @@ shinyServer(function(input, output, session) {
 	   )
 	})
 	
+	
 	output$spasad_plots <- renderPlot({
-	   par(mfrow=c(1,2))
 		plot(community_to_sad(spasim.com()), method = "rank")
-		plot(spasim.com(), main = "Community map")
-		
 	})
+	
+	output$spacom_plots <- renderPlot({
+	   sac1   <- spec_sample_curve(spasim.com(), method="rarefaction")
+	   divar1 <- divar(spasim.com(), exclude_zeros=F)
+	   dist1  <- dist_decay(spasim.com())
+	  
+	   par(mfrow = c(2, 2))
+	   
+		plot(spasim.com(), main = "Community map", col=spacolor_palette_individuals())
+		abline(h=spasim.com()$y_min_max, v=spasim.com()$x_min_max, lty = 3)
+	   plot(sac1, log = rarefaction_curves_loglog())
+	   plot(divar1)
+	   plot(dist1)
+		
+	}, height = 800)
+	
+	
+	
+	
+	
+	#########################################################################################################
+	# BASIC SAMPLING TAB
+	
+	output$bsacommunity_summary_table <- renderTable({
+	   input$spaRestart
+	   
+	   data.frame(Community = "",
+	              n_species = length(levels(spasim.com()$census$species)),
+	              n_individuals = nrow(spasim.com()$census))
+	})
+	## Sampling parameters
+	
+	## Plot the community and sampling squares
+	bsasampling_quadrats <- reactive({
+	   input$bsanew_sampling_button
+	   
+	   sample_quadrats(comm=spasim.com(), n_quadrats=input$bsanumber_of_quadrats, quadrat_area=input$bsaarea_of_quadrats, method = "random", avoid_overlap=T, plot=F, seed = NULL)
+	})
+	
+	bsararefaction_curves_list <- reactive({
+	   apply(bsasampling_quadrats()$spec_dat, 1, function(site) {
+	      rare_curve(site)
+	   })
+	})
+	
+	output$bsasampling_plot <- renderPlot({
+      quadrats_coordinates <- bsasampling_quadrats()$xy_dat
+      plot(spasim.com(), main = "Community distribution", col= spacolor_palette_individuals())
+      graphics::rect(quadrats_coordinates$x,
+                     quadrats_coordinates$y,
+                     quadrats_coordinates$x + sqrt(input$bsaarea_of_quadrats),
+                     quadrats_coordinates$y + sqrt(input$bsaarea_of_quadrats),
+                     lwd = 2, col = grDevices::adjustcolor("white", alpha.f = 0.6))
+	})
+	
+	output$bsararefaction_curves_plot <- renderPlot({
+	   # input$Restart
+	   # input$new_sampling_button
+	   # input$rarefaction_curves_plot_brush	# zooming in and out
+	   # input$rarefaction_curves_plot_dblclick	# zooming in and out
+	   # # input$rarefaction_curves_plot_click	# highlighting individual site
+	   # input$sampling_plot_click_info			# highlighting individual site
+	   # input$rarefaction_curves_loglog        # update plot when log axes rule change
+	   # 
+	   # isolate({
+	      plot(spec_sample_curve(spasim.com(), method="rarefaction"), log = rarefaction_curves_loglog())
+	      lines(rare_curve(apply(bsasampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+	      lapply(bsararefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
+
+	   
+	   # if(!is.null(input$sampling_plot_click)) {	# highlight
+	   #    lines(rarefaction_curves_list()[[sampling_plot_click_info()]], lwd=4, col="forestgreen")
+	   })
+	   
+	
+	
+	
 	
 	
 	#########################################################################################################
 	# SIMULATION TAB
   
   # update range for species richness, an observed species has minimum one individual
-	observe({
+	observeEvent(input$N, {
 		updateSliderInput(session, "S", max=input$N, value=input$S)
 	})
   # update the number of species in the drop down species list.

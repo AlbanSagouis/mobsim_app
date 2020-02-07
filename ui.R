@@ -12,8 +12,8 @@ library(shinyBS)
 # library(mobsim)
 library(DT)
 # library(darkmode)  # not great
-source("extras/help/Help.R", local = TRUE)
-source("extras/help/Labels.R", local = TRUE)
+source("extras/help/Help.r", local = TRUE)
+source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
@@ -80,31 +80,70 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
          	   ),
          	   column(width = 6, uiOutput("spaCVslider"))
          	),
-            actionButton(inputId="spaRestart",label="Restart Simulation"),
          	
-         	textInput(inputId = "spaspatagg", label = p(Labels$spatagg, tags$style(type="text/css", "#spaspatagg_icon {vertical-align: top;}"),
-         	                                         popify(bsButton("spaspatagg_icon", label="", icon=icon("question-circle"), size="extra-small"),
-         	                                                   title = Help$spatagg$title,
-         	                                                   content = Help$spatagg$content, trigger = "focus")), value = 0.1),
-         	selectizeInput(inputId="spaspatdist", p(Labels$spatdist, tags$style(type="text/css", "#spaspatdist_icon {vertical-align: top;}"),
-         	                                         popify(bsButton("spaspatdist_icon", label="", icon=icon("question-circle"), size="extra-small"),
-         	                                                  title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")),
-         	                     choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother"),
+         	fluidRow(
+         	   column(width = 6,
+         	          selectizeInput(inputId="spaspatdist", p(Labels$spatdist, tags$style(type="text/css", "#spaspatdist_icon {vertical-align: top;}"),
+         	                                                  popify(bsButton("spaspatdist_icon", label="", icon=icon("question-circle"), size="extra-small"),
+         	                                                         title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")),
+         	                         choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
+         	   ),
+         	   
+         	   column(width = 6,
+               	textInput(inputId="spaspatcoef",label=p(Labels$spatcoef, tags$style(type="text/css", "#spaspatcoef_icon {vertical-align: top;}"),
+               	                                         popify(bsButton("spaspatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
+               	                                                  title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
+               	                value="1")
+               )
+         	),
          	
-         	textInput(inputId="spaspatcoef",label=p(Labels$spatcoef, tags$style(type="text/css", "#spaspatcoef_icon {vertical-align: top;}"),
-         	                                         popify(bsButton("spaspatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
-         	                                                  title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
-         	                value="1")
+         	fluidRow(
+         	   column(width = 6, 
+         	          textInput(inputId = "spaspatagg", label = p(
+         	             Labels$spatagg, tags$style(type="text/css", "#spaspatagg_icon {vertical-align: top;}"),
+         	             popify(
+         	                bsButton("spaspatagg_icon", label="", icon=icon("question-circle"), size="extra-small"),
+         	                title = Help$spatagg$title,
+         	                content = Help$spatagg$content, trigger = "focus")), value = 0.1)
+         	   ),
+         	   column(width = 6,
+         	          actionButton(inputId="spaRestart", label="Restart Simulation")
+         	   )
+         	),
+         	plotOutput("spasad_plots")
          ),
          
          
          mainPanel(
-            plotOutput("spasad_plots")
+            plotOutput("spacom_plots")
          )
       )
    ),
 	
 	
+	tabPanel("Basic Sampling",
+	         sidebarLayout(
+	            sidebarPanel(
+	               tableOutput("bsacommunity_summary_table"),
+	               numericInput("bsanumber_of_quadrats", label="Number of quadrats", value=20, min=1, max=1000, step=1),
+	               numericInput("bsaarea_of_quadrats", label=p("Area of quadrats", tags$style(type="text/css", "#bsaarea_of_quadrats_icon {vertical-align: top;}"),
+	                                                        popify(bsButton("bsaarea_of_quadrats_icon", label="", icon=icon("question-circle"), size="extra-small"),
+	                                                               title = Help$area_of_quadrats$title, content = Help$area_of_quadrats$content,
+	                                                               trigger= "focus")),
+	                            value=0.005, min=0.00001, max=1, step=0.005),
+	               actionButton("bsanew_sampling_button", label="New sampling")
+	            ),
+	            
+	            mainPanel(
+	               column(width = 6, plotOutput("bsasampling_plot")),
+	               column(width = 6, plotOutput("bsararefaction_curves_plot"))
+	            )
+	         )
+	),
+	         
+	      
+	      
+	      
 	
 	
 	tabPanel("MOBsim - Simulation", 
@@ -385,7 +424,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
    	bsPopover(id = "bigtable_output", title = Help$bigtable_output$title, Help$bigtable_output$content, trigger = "focus")
 		
 	),
-	tabPanel("Plot parameters",
+	tabPanel("Graphical parameters",
    	sidebarLayout(
    	   sidebarPanel(
    	      # with_darkmode(),
