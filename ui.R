@@ -384,8 +384,8 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
 	
 	
 	tabPanel("Big Table",
-		dataTableOutput("bigtable_output"),
-		verbatimTextOutput("bigtable_selected_simulations"),
+		dataTableOutput("comparativeTable_output"),
+		verbatimTextOutput("comparativeTable_selected_simulations"),
 		fluidRow(
 			column(width=3,
 				fluidRow(align="center", actionButton("rem_all_simulations", "Erase all rows")),
@@ -421,7 +421,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
 			dblclick = "comparison_plot_dblclick"),
 		hr(),
 
-   	bsPopover(id = "bigtable_output", title = Help$bigtable_output$title, Help$bigtable_output$content, trigger = "focus")
+   	bsPopover(id = "comparativeTable_output", title = Help$comparativeTable_output$title, Help$comparativeTable_output$content, trigger = "focus")
 		
 	),
 	tabPanel("Graphical parameters",

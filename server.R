@@ -23,11 +23,11 @@ source("extras/help/Help.r", local = TRUE)
 source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 
-bigtable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
+comparativeTable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
 	 'gamma_richness','gamma_shannon','gamma_simpson',
 	 'alpha_mean_richness','alpha_mean_shannon','alpha_mean_simpson'
 )
-empty_bigtable <- function() matrix(NA, nrow=0, ncol=length(bigtable_names), dimnames=list(c(), bigtable_names))
+empty_comparativeTable <- function() matrix(NA, nrow=0, ncol=length(comparativeTable_names), dimnames=list(c(), comparativeTable_names))
 
 
 
@@ -51,7 +51,7 @@ shinyServer(function(input, output, session) {
 	# Big table tab
 	
 	session$userData$sim_ID <- 1
-	values$bigtable <- empty_bigtable()
+	values$comparativeTable <- empty_comparativeTable()
 	
 	## Adding rows to the simulation table
 	### From Simulation and sampling tabs
@@ -61,7 +61,7 @@ shinyServer(function(input, output, session) {
 
 		isolate({
 			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$bigtable <- rbind(values$bigtable, c(
+			values$comparativeTable <- rbind(values$comparativeTable, c(
 				sim_ID = session$userData$sim_ID,
 				method = input$method_type,
 				n_species = input$S,
@@ -85,7 +85,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$bigtable <- rbind(values$bigtable, c(
+			values$comparativeTable <- rbind(values$comparativeTable, c(
 				sim_ID = session$userData$sim_ID,
 				method = input$method_type,
 				n_species = input$S,
@@ -111,7 +111,7 @@ shinyServer(function(input, output, session) {
 
 		isolate({
 			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$bigtable <- rbind(values$bigtable, c(
+			values$comparativeTable <- rbind(values$comparativeTable, c(
 				sim_ID = session$userData$sim_ID,
 				method = "random_mother_points",
 				n_species = input$sbsS,
@@ -135,7 +135,7 @@ shinyServer(function(input, output, session) {
 				
 		isolate({
 			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$bigtable <- rbind(values$bigtable, c(
+			values$comparativeTable <- rbind(values$comparativeTable, c(
 				sim_ID = session$userData$sim_ID,
 				method = "random_mother_points",
 				n_species = input$sbsS,
@@ -156,27 +156,27 @@ shinyServer(function(input, output, session) {
 	
 	## Remove all simulations
 	observeEvent(input$rem_all_simulations, {
-		values$bigtable <- empty_bigtable()
+		values$comparativeTable <- empty_comparativeTable()
 	})
 	
 	## Remove selected simulations
 	observeEvent(input$rem_selected_simulations, {
-		values$bigtable <- values$bigtable[-as.numeric(input$bigtable_output_rows_selected), ]
+		values$comparativeTable <- values$comparativeTable[-as.numeric(input$comparativeTable_output_rows_selected), ]
 	})
 	
 	## Download simulation table
 	output$downloadSimulationTable <- downloadHandler(
 		filename = function() {paste("Simulation_table.csv", sep="")},
 		content  = function(fname) {
-			write.csv(values$bigtable, file=fname)
+			write.csv(values$comparativeTable, file=fname)
 		}
 	)
 	
-	## render bigtable
-	output$bigtable_output <- renderDataTable(
-		DT::datatable(values$bigtable, options = list(searching=FALSE, pageLength=20))
+	## render comparativeTable
+	output$comparativeTable_output <- renderDataTable(
+		DT::datatable(values$comparativeTable, options = list(searching=FALSE, pageLength=20))
 	)
-	output$bigtable_selected_simulations <- renderPrint(paste(values$bigtable[as.numeric(input$bigtable_output_rows_selected), "sim_ID"], collapse=", "))
+	output$comparativeTable_selected_simulations <- renderPrint(paste(values$comparativeTable[as.numeric(input$comparativeTable_output_rows_selected), "sim_ID"], collapse=", "))
 	
 	
 
@@ -356,7 +356,7 @@ shinyServer(function(input, output, session) {
 	   # 
 	   # isolate({
 	      plot(spec_sample_curve(spasim.com(), method="rarefaction"), log = rarefaction_curves_loglog())
-	      lines(rare_curve(apply(bsasampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+	      lines(rare_curve(apply(bsasampling_quadrats()$spec_dat, 2, sum)), lwd=3, col="limegreen")  	# Drawing gamma scale curve
 	      lapply(bsararefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 
 	   
@@ -1055,7 +1055,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			plot(spec_sample_curve(sim.com(), method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
-			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+			lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, sum)), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(rarefaction_curves_list())) {		# verification aid
 				# temp=rarefaction_curves_list()[[site]]
@@ -1085,7 +1085,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			plot(spec_sample_curve(sim.com(), method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
-			lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+			lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, sum)), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
 				# temp=previous_rarefaction_curves_list()[[site]]
@@ -1190,7 +1190,7 @@ shinyServer(function(input, output, session) {
 		   
 			isolate({
 				plot(spec_sample_curve(sim.com(), method="rarefaction"), xlim=ranges$x, ylim=ranges$y, log = rarefaction_curves_loglog())
-				lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+				lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, sum)), lwd=3, col="limegreen")	# Drawing gamma scale curve
 				lapply(previous_rarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 				# for (site in names(previous_rarefaction_curves_list())) {		# verification aid
 					# temp=previous_rarefaction_curves_list()[[site]]
@@ -1477,7 +1477,7 @@ shinyServer(function(input, output, session) {
 		
 		isolate({
 			plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y, log = rarefaction_curves_loglog())
-			lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+			lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, sum)), lwd=3, col="limegreen")	# Drawing gamma scale curve
 			lapply(sbsrarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			# for (site in names(sbsrarefaction_curves_list())) {		# verification aid
 				# temp=sbsrarefaction_curves_list()[[site]]
@@ -1502,7 +1502,7 @@ shinyServer(function(input, output, session) {
 				tableOutput("sbscommunity_summary_table"),
 				tableOutput("sbsgamma_table"),
 				tableOutput("sbsalpha_summary_table")
-				# dataTableOutput("bigtable_output")
+				# dataTableOutput("comparativeTable_output")
 			),
 			column(width=4,
 				plotOutput("sbssampling_plot")
@@ -1617,7 +1617,7 @@ shinyServer(function(input, output, session) {
 		output[[rarefaction_plot_ID]] <- renderPlot({
 			isolate({
 				plot(spec_sample_curve(sbssim.com(), method="rarefaction"), xlim=sbsvalues$ranges$x, ylim=sbsvalues$ranges$y, log = rarefaction_curves_loglog())
-				lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+				lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, sum)), lwd=3, col="limegreen")	# Drawing gamma scale curve
 				lapply(sbsrarefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 			})
 		})
@@ -1649,7 +1649,7 @@ shinyServer(function(input, output, session) {
 	# COMPARISON
 	
 	simtab <- reactive({		
-		as.data.frame(values$bigtable[input$bigtable_output_rows_selected, ], stringsAsFactors=FALSE)
+		as.data.frame(values$comparativeTable[input$comparativeTable_output_rows_selected, ], stringsAsFactors=FALSE)
 	})
 	
 	output$simtab_output <- renderTable(simtab())
@@ -1673,7 +1673,7 @@ shinyServer(function(input, output, session) {
 	### Zooming tools
 	compranges <- reactiveValues(x = NULL, y = NULL)
 	
-	observeEvent(input$bigtable_output_rows_selected, {
+	observeEvent(input$comparativeTable_output_rows_selected, {
 		compranges$x <- c(1, max(unlist(lapply(simlist(), function(sim) sum(sim$sampled_quadrats$spec_dat)))))	# why sapply does not work?
 		compranges$y <- c(1, max(as.numeric(simtab()$n_species)))
 	})
@@ -1694,7 +1694,7 @@ shinyServer(function(input, output, session) {
 	
 	
 	output$comp_plot <- renderPlot({
-		if(is.null(input$bigtable_output_rows_selected)) {
+		if(is.null(input$comparativeTable_output_rows_selected)) {
 			return()
 		} else {
 			
@@ -1711,7 +1711,7 @@ shinyServer(function(input, output, session) {
 					}
 					if("Rarefaction curve" %in% input$compplot_types) {
 						plot(spec_sample_curve(sim$community, method="rarefaction"), log = rarefaction_curves_loglog())	# Plotting rarefaction curves
-						lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species>0))), lwd=3, col="limegreen")	# Drawing gamma scale curve
+						lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, sum)), lwd=3, col="limegreen")	# Drawing gamma scale curve
 						lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 					}
 					if("Distance decay" %in% input$compplot_types) {
@@ -1742,7 +1742,7 @@ shinyServer(function(input, output, session) {
 					xlab="Number of sampled individuals", ylab="Number of species", log = rarefaction_curves_loglog())
 				
 				lapply(simlist(), function(sim)	{	# gamma scale
-					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, function(species) sum(species > 0))), lwd=3, col=colorList[as.character(sim$sim_ID)])
+					lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, sum)), lwd=3, col=colorList[as.character(sim$sim_ID)])
 					lapply(sim$rarefaction_curve_list, lines, lwd=2, col=adjustcolor(colorList[as.character(sim$sim_ID)], alpha=0.5))	# alpha scale curves
 				})
 				legend("topleft", legend=names(colorList), col=colorList, bty="n", pch=19)
@@ -1751,7 +1751,7 @@ shinyServer(function(input, output, session) {
 	})#, width=ifelse(is.null(nsim()), NA, function(){300*nsim()}), height=ifelse(is.null(nplot()), NA, function(){350*nplot()}))
 	
 	output$debugging_simulation_table <- renderText({
-		# paste("class selected: ", class(input$bigtable_output_rows_selected), ", length selected: ", length(input$bigtable_output_rows_selected), ", class bigtable: ", class(values$bigtable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$compplot_types)
+		# paste("class selected: ", class(input$comparativeTable_output_rows_selected), ", length selected: ", length(input$comparativeTable_output_rows_selected), ", class comparativeTable: ", class(values$comparativeTable), ", class simtab: ", class(simtab())[1], ", nrow: ", nrow(simtab()), ", nrowdataframesimtab: ", nrow(as.data.frame(simtab())), ", length sim list: ", length(values$saved_simulations), ", radio buttons:", input$compplot_types)
 		paste0("class simtab()$n_individuals: ", class(simtab()$n_individuals))
 	})
 
@@ -1884,7 +1884,7 @@ shinyServer(function(input, output, session) {
 	output$rarefaction_curves_plot_icon <- renderUI(icon("question-circle"))
 	output$sampling_plot_icon <- renderUI(icon("question-circle"))
 	
-	output$bigtable_output_icon <- renderUI(icon("question-circle"))
+	output$comparativeTable_output_icon <- renderUI(icon("question-circle"))
 	output$downloadSimulationTable_icon <- renderUI(icon("question-circle"))
 	output$downloadSimulationList_icon <- renderUI(icon("question-circle"))
 	
