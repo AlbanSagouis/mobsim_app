@@ -133,7 +133,9 @@ navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population
 	                                                               title = Help$area_of_quadrats$title, content = Help$area_of_quadrats$content,
 	                                                               trigger= "focus")),
 	                            value=0.005, min=0.00001, max=1, step=0.005),
-	               actionButton("bsanew_sampling_button", label="New sampling")
+	               actionButton("bsanew_sampling_button", label="New sampling"),
+	               tableOutput("bsasampling_gamma_table"),
+	               tableOutput("bsasampling_alpha_summary_table")
 	            ),
 	            
 	            mainPanel(

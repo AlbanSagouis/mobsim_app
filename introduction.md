@@ -17,19 +17,19 @@ This is an interactive tool that aims to simulate and visualize multiple biodive
 ### The tool
 1. simulates locations of individuals of different species in a location (plot, area);      
 2. plots biodiversity patterns such as   
-+ species-abundance distributions (SAD) using Preston octave plot and rank-abundance curve,   
-+ spatial distribution of individuals within a unit area,  
-+ species rarefaction curves (SRC), species-area relationships (SAR), and the distance-decay curve.   
+	+ species-abundance distributions (SAD) using Preston octave plot and rank-abundance curve,   
+	+ spatial distribution of individuals within a unit area,  
+	+ species rarefaction curves (SRC), species-area relationships (SAR), and the distance-decay curve.   
 
 ### Additional tools
 1. Decomposition of the original app in independant exercices in tabs
-+ Species Abundance Distrutions
-+ Spatial distribution
-+ Sampling
+	+ Species Abundance Distrutions
+	+ Spatial distribution
+	+ Sampling
 2. New interactive simulation tools in MOBsim tab
 3. Comparison of simulation condition effects on Biodiversity indices 
-+ Interactively in Step by step tab
-+ On all simulations in the Comparative table tab
+	+ Interactively in Step by step tab
+	+ On all simulations in the Comparative table tab
 4. Graphical parametres
 
 

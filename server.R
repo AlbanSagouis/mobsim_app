@@ -24,8 +24,8 @@ source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 
 comparativeTable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
-	 'gamma_richness','gamma_shannon','gamma_simpson',
-	 'alpha_mean_richness','alpha_mean_shannon','alpha_mean_simpson'
+	 'gamma_richness','gamma_ens_shannon','gamma_ens_simpson',
+	 'alpha_mean_richness','alpha_mean_ens_shannon','alpha_mean_ens_simpson'
 )
 empty_comparativeTable <- function() matrix(NA, nrow=0, ncol=length(comparativeTable_names), dimnames=list(c(), comparativeTable_names))
 
@@ -71,11 +71,11 @@ shinyServer(function(input, output, session) {
 				quadrat_area =NA,
 				seed_sampling = NA,
 				gamma_richness = NA,
-				gamma_shannon = NA,
-				gamma_simpson = NA,
+				gamma_ens_shannon = NA,
+				gamma_ens_simpson = NA,
 				alpha_mean_richness = NA,
-				alpha_mean_shannon = NA,
-				alpha_mean_simpson = NA
+				alpha_mean_ens_shannon = NA,
+				alpha_mean_ens_simpson = NA
 			))
 		})
 	})
@@ -95,11 +95,11 @@ shinyServer(function(input, output, session) {
 				quadrat_area = input$area_of_quadrats,
 				seed_sampling = seed_sampling(),
 				gamma_richness = sampling_gamma_table()$n_species,
-				gamma_shannon = sampling_gamma_table()$shannon,
-				gamma_simpson = sampling_gamma_table()$simpson,
+				gamma_ens_shannon = sampling_gamma_table()$shannon,
+				gamma_ens_simpson = sampling_gamma_table()$simpson,
 				alpha_mean_richness = sampling_alpha_summary_table()["n_species","mean"],
-				alpha_mean_shannon = sampling_alpha_summary_table()["shannon","mean"],
-				alpha_mean_simpson = sampling_alpha_summary_table()["simpson","mean"]
+				alpha_mean_ens_shannon = sampling_alpha_summary_table()["shannon","mean"],
+				alpha_mean_ens_simpson = sampling_alpha_summary_table()["simpson","mean"]
 			))
 		})
 	})
@@ -121,11 +121,11 @@ shinyServer(function(input, output, session) {
 				quadrat_area = input$sbsarea_of_quadrats,
 				seed_sampling = seed_sampling(),
 				gamma_richness = sbsgamma_table()$n_species,
-				gamma_shannon = sbsgamma_table()$shannon,
-				gamma_simpson = sbsgamma_table()$simpson,
+				gamma_ens_shannon = sbsgamma_table()$shannon,
+				gamma_ens_simpson = sbsgamma_table()$simpson,
 				alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
-				alpha_mean_shannon = sbsalpha_summary_table()["shannon","mean"],
-				alpha_mean_simpson = sbsalpha_summary_table()["simpson","mean"]
+				alpha_mean_ens_shannon = sbsalpha_summary_table()["shannon","mean"],
+				alpha_mean_ens_simpson = sbsalpha_summary_table()["simpson","mean"]
 			))
 		})
 	})
@@ -145,11 +145,11 @@ shinyServer(function(input, output, session) {
 				quadrat_area = input$sbsarea_of_quadrats,
 				seed_sampling = seed_sampling(),
 				gamma_richness = sbsgamma_table()$n_species,
-				gamma_shannon = sbsgamma_table()$shannon,
-				gamma_simpson = sbsgamma_table()$simpson,
+				gamma_ens_shannon = sbsgamma_table()$shannon,
+				gamma_ens_simpson = sbsgamma_table()$simpson,
 				alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
-				alpha_mean_shannon = sbsalpha_summary_table()["shannon","mean"],
-				alpha_mean_simpson = sbsalpha_summary_table()["simpson","mean"]
+				alpha_mean_ens_shannon = sbsalpha_summary_table()["shannon","mean"],
+				alpha_mean_ens_simpson = sbsalpha_summary_table()["simpson","mean"]
 			))
 		})
 	})
@@ -324,6 +324,36 @@ shinyServer(function(input, output, session) {
 	              n_individuals = nrow(spasim.com()$census))
 	})
 	## Sampling parameters
+	
+	## Sampling summary
+	### gamma scale
+	bsasampling_gamma_table <- reactive({
+      abund <- apply(bsasampling_quadrats()$spec_dat, 2, sum)
+      abund <- abund[abund > 0]
+      relabund <- abund/sum(abund)
+      shannon <- - sum(relabund * log(relabund))
+      simpson <- 1- sum(relabund^2)
+      data.frame(
+         Gamma_scale = "",
+         n_species= length(abund),
+         # shannon = round(shannon, 3),
+         ens_shannon = round(exp(shannon), 3),
+         # simpson = round(simpson, 3)
+         ens_simpson = round(1/(1 - simpson), 3)
+      )
+	})
+	output$bsasampling_gamma_table <- renderTable(bsasampling_gamma_table())
+	
+	bsasampling_alpha_summary_table <- reactive({
+      quadrats_coordinates <- bsasampling_quadrats()$xy_dat
+      temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
+         div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$bsaarea_of_quadrats), ysize=sqrt(input$bsaarea_of_quadrats), comm=spasim.com())
+      }), 3)))[,c('n_species','n_endemics','ens_shannon','ens_simpson')]
+      funs <- list(min=min, max=max, mean=mean, sd=sd)
+      data.frame(Alpha_scale=colnames(temp), round(sapply(funs, mapply, temp),3))
+	})
+	output$bsasampling_alpha_summary_table <- renderTable(bsasampling_alpha_summary_table())
+	
 	
 	## Plot the community and sampling squares
 	bsasampling_quadrats <- reactive({
@@ -982,10 +1012,10 @@ shinyServer(function(input, output, session) {
 			data.frame(
 							Gamma_scale = "",
 							n_species= length(abund),
-							shannon = round(shannon, 3),
-							# ens_shannon = round(exp(shannon), 3),
-							simpson = round(simpson, 3)
-							# ens_simpson = round(1/(1 - simpson), 3)
+							# shannon = round(shannon, 3),
+							ens_shannon = round(exp(shannon), 3),
+							# simpson = round(simpson, 3)
+							ens_simpson = round(1/(1 - simpson), 3)
 			)
 		})
 	})
@@ -1003,10 +1033,10 @@ shinyServer(function(input, output, session) {
 			data.frame(
 							Gamma_scale = "",
 							n_species= length(abund),
-							shannon = round(shannon, 3),
-							# ens_shannon = round(exp(shannon), 3),
-							simpson = round(simpson, 3)
-							# ens_simpson = round(1/(1 - simpson), 3)
+							# shannon = round(shannon, 3),
+							ens_shannon = round(exp(shannon), 3),
+							# simpson = round(simpson, 3)
+							ens_simpson = round(1/(1 - simpson), 3)
 			)
 		})
 	})
@@ -1019,7 +1049,7 @@ shinyServer(function(input, output, session) {
 		isolate({
 			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			DT::datatable(
-				t(round(sapply(1:nrow(quadrats_coordinates), function(i) div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sim.com())), 3))[,c('n_species','n_endemics','shannon','simpson')],
+				t(round(sapply(1:nrow(quadrats_coordinates), function(i) div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sim.com())), 3))[,c('n_species','n_endemics','ens_shannon','ens_simpson')],
 				options=list(searching = FALSE, info = TRUE, sort = TRUE))
 		})
 	})
@@ -1031,7 +1061,7 @@ shinyServer(function(input, output, session) {
 			quadrats_coordinates <- sampling_quadrats()$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
 				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sim.com())
-			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
+			}), 3)))[,c('n_species','n_endemics','ens_shannon','ens_simpson')]
 			funs <- list(min=min, max=max, mean=mean, sd=sd)
 			data.frame(Alpha_scale=colnames(temp), round(sapply(funs, mapply, temp),3))
 		})
@@ -1045,7 +1075,7 @@ shinyServer(function(input, output, session) {
 			quadrats_coordinates <- session$userData$previous_sampled_quadrats$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
 				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$area_of_quadrats), ysize=sqrt(input$area_of_quadrats), comm=sim.com())
-			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
+			}), 3)))[,c('n_species','n_endemics','ens_shannon','ens_simpson')]
 			funs <- list(min=min, max=max, mean=mean, sd=sd)
 			data.frame(Alpha_scale=colnames(temp), round(sapply(funs, mapply, temp),3))
 		})
@@ -1419,10 +1449,10 @@ shinyServer(function(input, output, session) {
 			data.frame(
 							Gamma = "",
 							n_species= length(abund),
-							shannon = round(shannon, 3),
-							# ens_shannon = round(exp(shannon), 3),
-							simpson = round(simpson, 3)
-							# ens_simpson = round(1/(1 - simpson), 3)
+							# shannon = round(shannon, 3),
+							ens_shannon = round(exp(shannon), 3),
+							# simpson = round(simpson, 3)
+							ens_simpson = round(1/(1 - simpson), 3)
 			)
 		})
 	})
@@ -1438,7 +1468,7 @@ shinyServer(function(input, output, session) {
 			quadrats_coordinates <- sbssampling_quadrats()$xy_dat
 			temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
 				div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$sbsarea_of_quadrats), comm=sbssim.com())
-			}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
+			}), 3)))[,c('n_species','n_endemics','ens_shannon','ens_simpson')]
 			funs <- list(min=min, max=max, mean=mean, sd=sd)
 			data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
 		})
@@ -1597,10 +1627,10 @@ shinyServer(function(input, output, session) {
 				data.frame(
 								Gamma = "",
 								n_species= sum(abund >0),
-								shannon = round(shannon, 3),
-								# ens_shannon = round(exp(shannon), 3),
-								simpson = round(simpson, 3)
-								# ens_simpson = round(1/(1 - simpson), 3)
+								# shannon = round(shannon, 3),
+								ens_shannon = round(exp(shannon), 3),
+								# simpson = round(simpson, 3)
+								ens_simpson = round(1/(1 - simpson), 3)
 				)
 			})
 		})      
@@ -1610,7 +1640,7 @@ shinyServer(function(input, output, session) {
 				quadrats_coordinates <- sbssampling_quadrats()$xy_dat
 				temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
 					div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$sbsarea_of_quadrats), ysize=sqrt(input$sbsarea_of_quadrats), comm=sbssim.com())
-				}), 3)))[,c('n_species','n_endemics','shannon','simpson')]
+				}), 3)))[,c('n_species','n_endemics','ens_shannon','ens_simpson')]
 				funs <- list(min=min, max=max, mean=mean, sd=sd)
 				data.frame(Alpha=colnames(temp), round(sapply(funs, mapply, temp),3))
 			})
