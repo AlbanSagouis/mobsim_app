@@ -300,9 +300,12 @@ shinyServer(function(input, output, session) {
 	   
 		plot(spasim.com(), main = "Community map", col=spacolor_palette_individuals())
 		abline(h=spasim.com()$y_min_max, v=spasim.com()$x_min_max, lty = 3)
-	   plot(sac1, log = rarefaction_curves_loglog())
-	   plot(divar1)
-	   plot(dist1)
+	   
+		if(input$exercise_number == 3)   {
+	      plot(sac1, log = rarefaction_curves_loglog())
+	      plot(divar1)
+	      plot(dist1)
+	   }
 		
 	}, height = 800)
 	
@@ -363,6 +366,23 @@ shinyServer(function(input, output, session) {
 	   # if(!is.null(input$sampling_plot_click)) {	# highlight
 	   #    lines(rarefaction_curves_list()[[sampling_plot_click_info()]], lwd=4, col="forestgreen")
 	   })
+	
+	output$bsadivar_plot <- renderPlot({
+	   divar1 <- divar(spasim.com(), exclude_zeros=F)
+	   plot(divar1)
+	   abline(v = input$bsaarea_of_quadrats * input$bsanumber_of_quadrats / ((spasim.com()$x_min_max[2] - spasim.com()$x_min_max[1]) * (spasim.com()$y_min_max[2] - spasim.com()$y_min_max[1])), lty = 2, lwd = 2) # proportion of the total area sampled
+	})
+	
+	output$bsadist_decay_plot <- renderPlot({
+	   dist1 <- dist_decay(spasim.com())
+	   plot(dist1)
+	   
+	   dist_quadrats <- dist_decay_quadrats(bsasampling_quadrats(), method = "bray", binary = F)
+	   points(similarity ~ distance, data = dist_quadrats, col = "limegreen")
+	   dd_loess <- stats::loess(similarity ~ distance, data = dist_quadrats)
+	   pred_sim <- stats::predict(dd_loess)
+	   graphics::lines(dist_quadrats$distance, pred_sim, col = "limegreen", lwd = 2, add = TRUE)
+	})
 	   
 	
 	

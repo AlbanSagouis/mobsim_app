@@ -18,11 +18,11 @@ source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="Space - Distribution simulation",
+navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population simulation",
            
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	
-	tabPanel("SAD - Population simulation",
+	tabPanel("1 SAD - Population simulation",
       sidebarLayout(
          sidebarPanel(
          	# Slider inputs
@@ -51,7 +51,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
       )
    ),
 	
-	tabPanel("Space - Distribution simulation",
+	tabPanel("2 Space - Distribution simulation",
       sidebarLayout(
          sidebarPanel(
          	fluidRow(
@@ -110,7 +110,9 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
          	          actionButton(inputId="spaRestart", label="Restart Simulation")
          	   )
          	),
-         	plotOutput("spasad_plots")
+         	plotOutput("spasad_plots"),
+         	radioButtons("exercise_number", "Exercise number",
+         	             choices = 2:3, selected = 2, inline = TRUE)
          ),
          
          
@@ -121,7 +123,7 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
    ),
 	
 	
-	tabPanel("Basic Sampling",
+	tabPanel("3 Basic Sampling",
 	         sidebarLayout(
 	            sidebarPanel(
 	               tableOutput("bsacommunity_summary_table"),
@@ -135,8 +137,14 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
 	            ),
 	            
 	            mainPanel(
-	               column(width = 6, plotOutput("bsasampling_plot")),
-	               column(width = 6, plotOutput("bsararefaction_curves_plot"))
+	               fluidRow(
+	                  column(width = 6, plotOutput("bsasampling_plot")),
+	                  column(width = 6, plotOutput("bsararefaction_curves_plot"))
+	               ),
+	               fluidRow(
+	                  column(width = 6, plotOutput("bsadivar_plot")),
+	                  column(width = 6, plotOutput("bsadist_decay_plot"))
+	              )
 	            )
 	         )
 	),
@@ -416,9 +424,12 @@ navbarPage("Visualization of biodiversity pattern", selected="Space - Distributi
 		),
 		# actionButton("compare_selected_simulations","Compare selected simulations"),
 		# verbatimTextOutput("debugging_simulation_table"),
-		plotOutput("comp_plot",
+		fluidRow(align = "center",
+		         column(width = 6, offset= 3, plotOutput("comp_plot",
 			brush = brushOpts(id = "comparison_plot_brush", resetOnNew = TRUE),
-			dblclick = "comparison_plot_dblclick"),
+			dblclick = "comparison_plot_dblclick")
+		         )
+		),
 		hr(),
 
    	bsPopover(id = "comparativeTable_output", title = Help$comparativeTable_output$title, Help$comparativeTable_output$content, trigger = "focus")
