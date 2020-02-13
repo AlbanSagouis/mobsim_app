@@ -18,7 +18,7 @@ source("extras/graphical_parameters.R", local = TRUE)
 
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population simulation",
+navbarPage("Visualization of biodiversity pattern", selected="MOBsim - Simulation",
            
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	

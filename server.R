@@ -208,6 +208,7 @@ shinyServer(function(input, output, session) {
 	
 	sadsim.sad <- reactive({
 	   input$sadRestart
+	   req(input$sadcoef)
 	   
 	   switch(input$sadsad_type,
          "lnorm" = sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef), fix_s_sim = TRUE),
@@ -253,6 +254,7 @@ shinyServer(function(input, output, session) {
 	
 	spasim.com <- reactive({
 	   input$spaRestart
+	   req(input$spacoef)
 	   
 	   spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spaspatagg), ",")))
 	   spatcoef_num <- as.numeric(unlist(strsplit(trimws(input$spaspatcoef), ",")))
@@ -766,8 +768,8 @@ shinyServer(function(input, output, session) {
 	
 	
    sim.com <- reactive({
-    input$Restart
-
+      input$Restart
+      req(input$coef)
     # validate(
 		# need(input$spatdist, label="1"),
 		# need(input$spatagg, label="2"),
