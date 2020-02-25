@@ -9,16 +9,17 @@
 
 library(shiny)
 library(shinyBS)
+# library(shinyjs)
 # library(mobsim)
 library(DT)
 # library(darkmode)  # not great
 source("extras/help/Help.r", local = TRUE)
 source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
-
 # Define UI for slider demo application
   
 navbarPage("Visualization of biodiversity pattern", selected="MOBsim - Simulation",
+   shinyjs::useShinyjs(),
            
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
 	

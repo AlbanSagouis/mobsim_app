@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+
 # library(devtools)
 # install_github('MoBiodiv/mobsim')    # downloads the latest version of the package
 # library(mobsim, lib.loc="./Library")
@@ -39,7 +40,7 @@ shinyServer(function(input, output, session) {
 	
 	# Plotting preferences
 	spacolor_palette_individuals <- reactive({
-	   do.call(color_palette(), list(n=input$spaS))
+	   do.call(color_palette(), list(n=debounced_spaS()))
 	})
 	color_palette_individuals <- reactive({
       do.call(color_palette(), list(n=input$S))
@@ -48,144 +49,13 @@ shinyServer(function(input, output, session) {
 	   do.call(color_palette(), list(n=input$sbsS))
 	})
 
-	# Big table tab
 	
-	session$userData$sim_ID <- 1
-	values$comparativeTable <- empty_comparativeTable()
-	
-	## Adding rows to the simulation table
-	### From Simulation and sampling tabs
-	#### Restart button
-	observeEvent(
-		input$Restart, {
-
-		isolate({
-			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$comparativeTable <- rbind(values$comparativeTable, c(
-				sim_ID = session$userData$sim_ID,
-				method = input$method_type,
-				n_species = input$S,
-				n_individuals = input$N,
-				seed_simulation = seed_simulation(),
-				n_quadrats = NA,
-				quadrat_area =NA,
-				seed_sampling = NA,
-				gamma_richness = NA,
-				gamma_ens_shannon = NA,
-				gamma_ens_simpson = NA,
-				alpha_mean_richness = NA,
-				alpha_mean_ens_shannon = NA,
-				alpha_mean_ens_simpson = NA
-			))
-		})
-	})
-	#### New sampling button
-	observeEvent(
-		input$new_sampling_button, {
-		
-		isolate({
-			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$comparativeTable <- rbind(values$comparativeTable, c(
-				sim_ID = session$userData$sim_ID,
-				method = input$method_type,
-				n_species = input$S,
-				n_individuals = input$N,
-				seed_simulation = seed_simulation(),
-				n_quadrats = input$number_of_quadrats,
-				quadrat_area = input$area_of_quadrats,
-				seed_sampling = seed_sampling(),
-				gamma_richness = sampling_gamma_table()$n_species,
-				gamma_ens_shannon = sampling_gamma_table()$shannon,
-				gamma_ens_simpson = sampling_gamma_table()$simpson,
-				alpha_mean_richness = sampling_alpha_summary_table()["n_species","mean"],
-				alpha_mean_ens_shannon = sampling_alpha_summary_table()["shannon","mean"],
-				alpha_mean_ens_simpson = sampling_alpha_summary_table()["simpson","mean"]
-			))
-		})
-	})
-	
-	### From step-by-step tab
-	#### Restart button
-	observeEvent(
-		input$sbsRestart, {
-
-		isolate({
-			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$comparativeTable <- rbind(values$comparativeTable, c(
-				sim_ID = session$userData$sim_ID,
-				method = "random_mother_points",
-				n_species = input$sbsS,
-				n_individuals = input$sbsN,
-				seed_simulation = seed_simulation(),
-				n_quadrats = input$sbsnumber_of_quadrats,
-				quadrat_area = input$sbsarea_of_quadrats,
-				seed_sampling = seed_sampling(),
-				gamma_richness = sbsgamma_table()$n_species,
-				gamma_ens_shannon = sbsgamma_table()$shannon,
-				gamma_ens_simpson = sbsgamma_table()$simpson,
-				alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
-				alpha_mean_ens_shannon = sbsalpha_summary_table()["shannon","mean"],
-				alpha_mean_ens_simpson = sbsalpha_summary_table()["simpson","mean"]
-			))
-		})
-	})
-	#### New sampling button
-	observeEvent(
-		input$sbsnew_sampling_button, {
-				
-		isolate({
-			session$userData$sim_ID <- session$userData$sim_ID + 1
-			values$comparativeTable <- rbind(values$comparativeTable, c(
-				sim_ID = session$userData$sim_ID,
-				method = "random_mother_points",
-				n_species = input$sbsS,
-				n_individuals = input$sbsN,
-				seed_simulation = seed_simulation(),
-				n_quadrats = input$sbsnumber_of_quadrats,
-				quadrat_area = input$sbsarea_of_quadrats,
-				seed_sampling = seed_sampling(),
-				gamma_richness = sbsgamma_table()$n_species,
-				gamma_ens_shannon = sbsgamma_table()$shannon,
-				gamma_ens_simpson = sbsgamma_table()$simpson,
-				alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
-				alpha_mean_ens_shannon = sbsalpha_summary_table()["shannon","mean"],
-				alpha_mean_ens_simpson = sbsalpha_summary_table()["simpson","mean"]
-			))
-		})
-	})
-	
-	## Remove all simulations
-	observeEvent(input$rem_all_simulations, {
-		values$comparativeTable <- empty_comparativeTable()
-	})
-	
-	## Remove selected simulations
-	observeEvent(input$rem_selected_simulations, {
-		values$comparativeTable <- values$comparativeTable[-as.numeric(input$comparativeTable_output_rows_selected), ]
-	})
-	
-	## Download simulation table
-	output$downloadSimulationTable <- downloadHandler(
-		filename = function() {paste("Simulation_table.csv", sep="")},
-		content  = function(fname) {
-			write.csv(values$comparativeTable, file=fname)
-		}
-	)
-	
-	## render comparativeTable
-	output$comparativeTable_output <- renderDataTable(
-		DT::datatable(values$comparativeTable, options = list(searching=FALSE, pageLength=20))
-	)
-	output$comparativeTable_selected_simulations <- renderPrint(paste(values$comparativeTable[as.numeric(input$comparativeTable_output_rows_selected), "sim_ID"], collapse=", "))
-	
-	
-
 	#########################################################################################################
 	# SAD -POPULATION SIMULATION TAB
   
   # update range for species richness, an observed species has minimum one individual
 	observeEvent(input$sadN,{
-		updateSliderInput(session, "sadS", max=input$sadN, value=input$sadS)
+		updateSliderInput(session, "sadS", max=debounced_sadN(), value=debounced_sadS())
 	})
 
 	output$sadCVslider <- renderUI({
@@ -206,14 +76,22 @@ shinyServer(function(input, output, session) {
 	})	
 	
 	
+	reactive_sadS <- reactive(input$sadS)
+	reactive_sadN <- reactive(input$sadN)
+	#  Adding a delay when N and S sliders are triggered too often which can lead R to freeze
+	debounced_sadS <- debounce(r = reactive_sadS, millis=1000)
+	debounced_sadN <- debounce(r = reactive_sadN, millis=1000)
+	
+	
+	
 	sadsim.sad <- reactive({
 	   input$sadRestart
 	   req(input$sadcoef)
 	   
 	   switch(input$sadsad_type,
-         "lnorm" = sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef), fix_s_sim = TRUE),
-         "geom" = sim_sad(s_pool=input$sadS, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(prob=input$sadcoef), fix_s_sim = TRUE),
-         "ls" = sim_sad(s_pool=NA, n_sim=input$sadN, sad_type=input$sadsad_type, sad_coef = list(N=input$sadN, alpha=as.numeric(input$sadcoef)), fix_s_sim = TRUE)
+         "lnorm" = sim_sad(s_pool=debounced_sadS(), n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef), fix_s_sim = TRUE),
+         "geom" = sim_sad(s_pool=debounced_sadS(), n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(prob=input$sadcoef), fix_s_sim = TRUE),
+         "ls" = sim_sad(s_pool=NA, n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(N=debounced_sadN(), alpha=as.numeric(input$sadcoef)), fix_s_sim = TRUE)
       )
 	})
 	
@@ -228,8 +106,8 @@ shinyServer(function(input, output, session) {
 	# SPACE - DISTRIBUTION SIMULATION TAB
   
   # update range for species richness, an observed species has minimum one individual
-	observeEvent(input$spaN,{
-	   updateSliderInput(session, "spaS", min=5, max=input$spaN, value=input$spaS, step=5)
+	observeEvent(debounced_spaN(),{
+	   updateSliderInput(session, "spaS", min=5, max=debounced_spaN(), value=debounced_spaS(), step=5)
 	})
 	
 	output$spaCVslider <- renderUI({
@@ -251,6 +129,12 @@ shinyServer(function(input, output, session) {
 	   )
 	})	
 	
+	reactive_spaS <- reactive(input$spaS)
+	reactive_spaN <- reactive(input$spaN)
+	#  Adding a delay when N and S sliders are triggered too often which can lead R to freeze
+	debounced_spaS <- debounce(r = reactive_spaS, millis=1000)
+	debounced_spaN <- debounce(r = reactive_spaN, millis=1000)
+	
 	
 	spasim.com <- reactive({
 	   input$spaRestart
@@ -270,24 +154,25 @@ shinyServer(function(input, output, session) {
                                    yrange = c(0,1))
 
 	   switch(input$spasad_type,
-	          "lnorm"=sim_thomas_community(s_pool = input$spaS, n_sim = input$spaN, 
+	          "lnorm"=sim_thomas_community(s_pool = debounced_spaS(), n_sim = debounced_spaN(), 
 	                                       sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 	                                       sad_type = input$spasad_type, sad_coef=list(cv_abund=input$spacoef),
 	                                       fix_s_sim = T, seed = NULL,
 	                                       xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-	          "geom"=sim_thomas_community(s_pool = input$spaS, n_sim = input$spaN,
+	          "geom"=sim_thomas_community(s_pool = debounced_spaS(), n_sim = debounced_spaN(),
 	                                      sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 	                                      sad_type = input$spasad_type, sad_coef=list(prob=input$spacoef),
 	                                      fix_s_sim = T, seed = NULL,
 	                                      xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-	          "ls"=sim_thomas_community(s_pool = NA, n_sim = input$spaN,
-	                                    sad_type = input$spasad_type, sad_coef=list(N=input$spaN,alpha=as.numeric(input$spacoef)),
+	          "ls"=sim_thomas_community(s_pool = NA, n_sim = debounced_spaN(),
+	                                    sad_type = input$spasad_type, sad_coef=list(N=debounced_spaN(),alpha=as.numeric(input$spacoef)),
 	                                    sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 	                                    fix_s_sim = T, seed = NULL,
 	                                    xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
 	   )
 	})
 	
+
 	
 	output$spasad_plots <- renderPlot({
 		plot(community_to_sad(spasim.com()), method = "rank")
@@ -845,8 +730,9 @@ shinyServer(function(input, output, session) {
    output$InteractivePlot <- renderPlot({
       input$Restart
       input$rarefaction_curves_loglog
-      
-		plot_layout(sim.com(), colors_for_individuals = color_palette_individuals())
+      isolate({
+		   plot_layout(sim.com(), colors_for_individuals = color_palette_individuals())
+      })
 	})
 	
 	output$PreviousInteractivePlot <- renderPlot({
@@ -1940,6 +1826,137 @@ shinyServer(function(input, output, session) {
 	output$downloadSimulationTable_icon <- renderUI(icon("question-circle"))
 	output$downloadSimulationList_icon <- renderUI(icon("question-circle"))
 	
+	
+	
+	# Big table tab
+	
+	session$userData$sim_ID <- 1
+	values$comparativeTable <- empty_comparativeTable()
+	
+	## Adding rows to the simulation table
+	### From Simulation and sampling tabs
+	#### Restart button
+	observeEvent(
+	   input$Restart, {
+	      
+	      isolate({
+	         session$userData$sim_ID <- session$userData$sim_ID + 1
+	         values$comparativeTable <- rbind(values$comparativeTable, c(
+	            sim_ID = session$userData$sim_ID,
+	            method = input$method_type,
+	            n_species = input$S,
+	            n_individuals = input$N,
+	            seed_simulation = seed_simulation(),
+	            n_quadrats = NA,
+	            quadrat_area =NA,
+	            seed_sampling = NA,
+	            gamma_richness = NA,
+	            gamma_ens_shannon = NA,
+	            gamma_ens_simpson = NA,
+	            alpha_mean_richness = NA,
+	            alpha_mean_ens_shannon = NA,
+	            alpha_mean_ens_simpson = NA
+	         ))
+	      })
+	   })
+	#### New sampling button
+	observeEvent(
+	   input$new_sampling_button, {
+	      
+	      isolate({
+	         session$userData$sim_ID <- session$userData$sim_ID + 1
+	         values$comparativeTable <- rbind(values$comparativeTable, c(
+	            sim_ID = session$userData$sim_ID,
+	            method = input$method_type,
+	            n_species = input$S,
+	            n_individuals = input$N,
+	            seed_simulation = seed_simulation(),
+	            n_quadrats = input$number_of_quadrats,
+	            quadrat_area = input$area_of_quadrats,
+	            seed_sampling = seed_sampling(),
+	            gamma_richness = sampling_gamma_table()$n_species,
+	            gamma_ens_shannon = sampling_gamma_table()$shannon,
+	            gamma_ens_simpson = sampling_gamma_table()$simpson,
+	            alpha_mean_richness = sampling_alpha_summary_table()["n_species","mean"],
+	            alpha_mean_ens_shannon = sampling_alpha_summary_table()["shannon","mean"],
+	            alpha_mean_ens_simpson = sampling_alpha_summary_table()["simpson","mean"]
+	         ))
+	      })
+	   })
+	
+	### From step-by-step tab
+	#### Restart button
+	observeEvent(
+	   input$sbsRestart, {
+	      
+	      isolate({
+	         session$userData$sim_ID <- session$userData$sim_ID + 1
+	         values$comparativeTable <- rbind(values$comparativeTable, c(
+	            sim_ID = session$userData$sim_ID,
+	            method = "random_mother_points",
+	            n_species = input$sbsS,
+	            n_individuals = input$sbsN,
+	            seed_simulation = seed_simulation(),
+	            n_quadrats = input$sbsnumber_of_quadrats,
+	            quadrat_area = input$sbsarea_of_quadrats,
+	            seed_sampling = seed_sampling(),
+	            gamma_richness = sbsgamma_table()$n_species,
+	            gamma_ens_shannon = sbsgamma_table()$shannon,
+	            gamma_ens_simpson = sbsgamma_table()$simpson,
+	            alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
+	            alpha_mean_ens_shannon = sbsalpha_summary_table()["shannon","mean"],
+	            alpha_mean_ens_simpson = sbsalpha_summary_table()["simpson","mean"]
+	         ))
+	      })
+	   })
+	#### New sampling button
+	observeEvent(
+	   input$sbsnew_sampling_button, {
+	      
+	      isolate({
+	         session$userData$sim_ID <- session$userData$sim_ID + 1
+	         values$comparativeTable <- rbind(values$comparativeTable, c(
+	            sim_ID = session$userData$sim_ID,
+	            method = "random_mother_points",
+	            n_species = input$sbsS,
+	            n_individuals = input$sbsN,
+	            seed_simulation = seed_simulation(),
+	            n_quadrats = input$sbsnumber_of_quadrats,
+	            quadrat_area = input$sbsarea_of_quadrats,
+	            seed_sampling = seed_sampling(),
+	            gamma_richness = sbsgamma_table()$n_species,
+	            gamma_ens_shannon = sbsgamma_table()$shannon,
+	            gamma_ens_simpson = sbsgamma_table()$simpson,
+	            alpha_mean_richness = sbsalpha_summary_table()["n_species","mean"],
+	            alpha_mean_ens_shannon = sbsalpha_summary_table()["shannon","mean"],
+	            alpha_mean_ens_simpson = sbsalpha_summary_table()["simpson","mean"]
+	         ))
+	      })
+	   })
+	
+	## Remove all simulations
+	observeEvent(input$rem_all_simulations, {
+	   values$comparativeTable <- empty_comparativeTable()
+	})
+	
+	## Remove selected simulations
+	observeEvent(input$rem_selected_simulations, {
+	   values$comparativeTable <- values$comparativeTable[-as.numeric(input$comparativeTable_output_rows_selected), ]
+	})
+	
+	## Download simulation table
+	output$downloadSimulationTable <- downloadHandler(
+	   filename = function() {paste("Simulation_table.csv", sep="")},
+	   content  = function(fname) {
+	      write.csv(values$comparativeTable, file=fname)
+	   }
+	)
+	
+	## render comparativeTable
+	output$comparativeTable_output <- renderDataTable(
+	   DT::datatable(values$comparativeTable, options = list(searching=FALSE, pageLength=20))
+	)
+	output$comparativeTable_selected_simulations <- renderPrint(paste(values$comparativeTable[as.numeric(input$comparativeTable_output_rows_selected), "sim_ID"], collapse=", "))
 	
 	
 	
