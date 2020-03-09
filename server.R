@@ -1761,6 +1761,80 @@ shinyServer(function(input, output, session) {
 	
 	
 	
+	
+	
+	# SPECIES BY SPECIES SIMULATION
+	# spe prefix
+	
+	
+	speSinitial <- 5
+	speN <- 100
+	spesad_type <- "lnorm"
+	specoef <- 1
+	
+   spe <- reactiveValues(S = speSinitial,
+                         sad = sim_sad(s_pool=speSinitial, n_sim=speN, sad_type=spesad_type, sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE))
+	# S
+   observeEvent(input$speS, {
+      spe$S <- input$speS
+   })
+   
+	# reactive_speS <- reactive(spe$S)
+	#  Adding a delay when N and S sliders are triggered too often which can lead R to freeze
+	# debounced_speS <- debounce(r = reactive_speS, millis=500)
+	
+   
+	
+	# SAD
+	spesim.sad <- reactive({
+	   # input$speS
+	   input$speRestart
+	   # req(input$specoef)
+	   # req(debounced_speS)
+	   isolate({
+   	   sad <- switch(spesad_type,
+   	          "lnorm" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="lnorm", sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE),
+   	          "geom" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="geom", sad_coef = list(prob=specoef), fix_s_sim = TRUE)
+   	   )
+         spe$sad <- sad
+         return(sad)
+	   })
+	})
+	
+   
+   
+	observeEvent(input$speAddSpecies, {
+	   # S
+	   newSpeciesNumbers <- (spe$S+1):(spe$S + input$speNewS)
+	   spe$S <- spe$S + input$speNewS
+	   # SAD
+	   spe$sad <- c(spe$sad, rep(input$speNewN, input$speNewS))
+	   names(spe$sad)[newSpeciesNumbers] <- paste0("species", newSpeciesNumbers)
+	   class(spe$sad) <- c("sad", "integer")
+	   # Update input$speS
+	   updateNumericInput(session, inputId = 'speS', value = spe$S)
+	})
+	
+	
+	output$spesad_plots <- renderPlot({
+	   req(spesim.sad())
+	   par(mfrow=c(1,2))
+	   plot(spe$sad, method = "octave")
+	   plot(spe$sad, method = "rank")
+	})
+	
+	
+	output$speCommunity_text <- renderText(paste0(spe$S, " species, and length spesim.sad(): ", length(spe$sad), ", and class spesim.sad(): ", class(spe$sad)[1], ", last species name=", names(spe$sad)[length(spe$sad)]))
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	# GRAPHICAL PARAMETERS TAB
 	## Palettes
 	

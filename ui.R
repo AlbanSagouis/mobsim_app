@@ -18,7 +18,7 @@ source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="MOBsim - Simulation",
+navbarPage("Visualization of biodiversity pattern", selected="Species by species simulation",
    shinyjs::useShinyjs(),
            
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
@@ -438,6 +438,26 @@ navbarPage("Visualization of biodiversity pattern", selected="MOBsim - Simulatio
    	bsPopover(id = "comparativeTable_output", title = Help$comparativeTable_output$title, Help$comparativeTable_output$content, trigger = "focus")
 		
 	),
+   tabPanel("Species by species simulation",
+            sidebarLayout(
+               sidebarPanel(
+                  fluidRow(
+                     column(width= 6, numericInput(inputId = "speS", label = Labels$S, value = 5, min=2, max=200, step=1)),
+                     column(width = 6, actionButton(inputId = "speRestart", label = "New simulation"))
+                  ),
+                  fluidRow(
+                     column(width = 4, numericInput(inputId = "speNewS", label = "Number of new species", value = 1, min=1, max=1000, step=1)),
+                     column(width = 4, numericInput(inputId = "speNewN", label = Labels$N, value = 100, min=1, max=5000, step=1)),
+                     column(width = 4, actionButton(inputId = "speAddSpecies", label = "Add species"))
+                  )
+                  # show a clickable table with species abundance and a delete species button
+               ),
+               mainPanel(
+                  textOutput(outputId = "speCommunity_text"),
+                  plotOutput("spesad_plots")
+               )
+            )
+   ),
 	tabPanel("Graphical parameters",
    	sidebarLayout(
    	   sidebarPanel(
