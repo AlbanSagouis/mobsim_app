@@ -1773,32 +1773,38 @@ shinyServer(function(input, output, session) {
 	specoef <- 1
 	
    spe <- reactiveValues(S = speSinitial,
-                         sad = sim_sad(s_pool=speSinitial, n_sim=speN, sad_type=spesad_type, sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE))
+                         sad = sim_sad(s_pool=speSinitial, n_sim=speN, sad_type=spesad_type, sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE),
+                         inputSRun = TRUE)
 	# S
    observeEvent(input$speS, {
       spe$S <- input$speS
    })
    
-	# reactive_speS <- reactive(spe$S)
-	#  Adding a delay when N and S sliders are triggered too often which can lead R to freeze
-	# debounced_speS <- debounce(r = reactive_speS, millis=500)
-	
+   shinyjs::onclick("speS", expr = {   # onclick() runs the expression only when the ID element is clicked
+      spe$inputSRun <- TRUE
+   })
    
+   spesim.sadTrigger <- reactive({
+	   input$speS
+	   input$speRestart
+	})
+   
+   debounced_spesim.sadTrigger <- debounce(r = spesim.sadTrigger, millis=100)   # debounced to make sure that the observeEvent on the trigger is activated only after spe$inputSRun was set to TRUE after a click on input$S
 	
 	# SAD
-	spesim.sad <- reactive({
-	   # input$speS
-	   input$speRestart
+	observeEvent(debounced_spesim.sadTrigger(), {
+	   
 	   # req(input$specoef)
 	   # req(debounced_speS)
-	   isolate({
-   	   sad <- switch(spesad_type,
-   	          "lnorm" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="lnorm", sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE),
-   	          "geom" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="geom", sad_coef = list(prob=specoef), fix_s_sim = TRUE)
-   	   )
-         spe$sad <- sad
-         return(sad)
-	   })
+	   if(spe$inputSRun) {
+   	   isolate({
+      	   sad <- switch(spesad_type,
+      	          "lnorm" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="lnorm", sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE),
+      	          "geom" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="geom", sad_coef = list(prob=specoef), fix_s_sim = TRUE)
+      	   )
+            spe$sad <- sad
+   	   })
+	   }
 	})
 	
    
@@ -1813,18 +1819,21 @@ shinyServer(function(input, output, session) {
 	   class(spe$sad) <- c("sad", "integer")
 	   # Update input$speS
 	   updateNumericInput(session, inputId = 'speS', value = spe$S)
+	   spe$inputSRun <- FALSE
 	})
+	
+	output$speNewStext <- renderText(paste0(spe$S, " species")) 
 	
 	
 	output$spesad_plots <- renderPlot({
-	   req(spesim.sad())
+	   req(spe$sad)
 	   par(mfrow=c(1,2))
 	   plot(spe$sad, method = "octave")
 	   plot(spe$sad, method = "rank")
 	})
 	
 	
-	output$speCommunity_text <- renderText(paste0(spe$S, " species, and length spesim.sad(): ", length(spe$sad), ", and class spesim.sad(): ", class(spe$sad)[1], ", last species name=", names(spe$sad)[length(spe$sad)]))
+	output$speCommunity_text <- renderText(paste0(spe$S, " species, and length spe$sad: ", length(spe$sad), ", and class spe$sad: ", class(spe$sad)[1], ", last species name=", names(spe$sad)[length(spe$sad)], ", inputSRun is ", spe$inputSRun))
 	
 	
 	

@@ -44,7 +44,12 @@ navbarPage("Visualization of biodiversity pattern", selected="Species by species
 		                                            placement = "bottom", trigger = "focus")), 
 		               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm"),
             uiOutput("sadCVslider"),
-            actionButton(inputId="sadRestart",label="Restart Simulation")
+            actionButton(inputId="sadRestart",label="Restart Simulation"),
+            fluidRow(
+               column(width = 4, numericInput(inputId = "sadNewS", label = "Number of new species", value = 1, min=1, max=1000, step=1)),
+               column(width = 4, numericInput(inputId = "sadNewN", label = Labels$N, value = 100, min=1, max=5000, step=1)),
+               column(width = 4, actionButton(inputId = "sadAddSpecies", label = "Add species"))
+            )
          ),
          mainPanel(
             plotOutput("sadsad_plots")
@@ -447,8 +452,11 @@ navbarPage("Visualization of biodiversity pattern", selected="Species by species
                   ),
                   fluidRow(
                      column(width = 4, numericInput(inputId = "speNewS", label = "Number of new species", value = 1, min=1, max=1000, step=1)),
-                     column(width = 4, numericInput(inputId = "speNewN", label = Labels$N, value = 100, min=1, max=5000, step=1)),
-                     column(width = 4, actionButton(inputId = "speAddSpecies", label = "Add species"))
+                     column(width = 4, numericInput(inputId = "speNewN", label = "Number of individuals per species", value = 100, min=1, max=5000, step=1)),
+                     column(width = 4, 
+                        actionButton(inputId = "speAddSpecies", label = "Add species"),
+                        textOutput("speNewStext")
+                        )
                   )
                   # show a clickable table with species abundance and a delete species button
                ),
