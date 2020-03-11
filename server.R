@@ -53,10 +53,28 @@ shinyServer(function(input, output, session) {
 	#########################################################################################################
 	# SAD -POPULATION SIMULATION TAB
   
+	sadSinitial <- 5
+	sadNinitial <- 100
+	sadsad_type <- "lnorm"
+	sadcoefInitial <- 1
+	
+	sad <- reactiveValues(S = sadSinitial,
+	                      N = sadNinitial,
+	                      sad = sim_sad(s_pool=sadSinitial, n_sim=sadNinitial, sad_type=sadsad_type, sad_coef = list(cv_abund=sadcoefInitial), fix_s_sim = TRUE),
+	                      inputSorNRun = TRUE)
+	# S
+	observeEvent(input$sadS, {
+	   sad$S <- input$sadS
+	}, priority = 10)
+	# N
+	observeEvent(input$sadN, {
+	   sad$N <- input$sadN
+	}, priority = 10)	
+	
   # update range for species richness, an observed species has minimum one individual
-	observeEvent(input$sadN,{
-		updateSliderInput(session, "sadS", max=debounced_sadN(), value=debounced_sadS())
-	})
+	# observeEvent(input$sadN,{
+	# 	updateSliderInput(session, "sadS", max=debounced_sadN(), value=debounced_sadS())
+	# })
 
 	output$sadCVslider <- renderUI({
 		switch(input$sadsad_type,
@@ -75,33 +93,64 @@ shinyServer(function(input, output, session) {
 		)
 	})	
 	
+	shinyjs::onclick(id = "sadS", expr = {   # onclick() runs its expression only when the ID element is clicked
+	   sad$inputSorNRun <- TRUE
+	})
+	shinyjs::onclick(id = "sadN", expr = {
+	   sad$inputSorNRun <- TRUE
+	})	
 	
-	reactive_sadS <- reactive(input$sadS)
-	reactive_sadN <- reactive(input$sadN)
+	reactive_sadS <- reactive(sad$S)
+	reactive_sadN <- reactive(sad$N)
 	#  Adding a delay when N and S sliders are triggered too often which can lead R to freeze
-	debounced_sadS <- debounce(r = reactive_sadS, millis=1000)
-	debounced_sadN <- debounce(r = reactive_sadN, millis=1000)
+	debounced_sadS <- debounce(r = reactive_sadS, millis=200)
+	debounced_sadN <- debounce(r = reactive_sadN, millis=200)
 	
-	
-	
-	sadsim.sad <- reactive({
+	observeEvent({
+	   debounced_sadS()
+	   debounced_sadN()
 	   input$sadRestart
-	   req(input$sadcoef)
-	   
-	   switch(input$sadsad_type,
-         "lnorm" = sim_sad(s_pool=debounced_sadS(), n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef), fix_s_sim = TRUE),
-         "geom" = sim_sad(s_pool=debounced_sadS(), n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(prob=input$sadcoef), fix_s_sim = TRUE),
-         "ls" = sim_sad(s_pool=NA, n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(N=debounced_sadN(), alpha=as.numeric(input$sadcoef)), fix_s_sim = TRUE)
-      )
-	})
+	   }, {
+	   req(input$sadcoef)   # to avoid an arror at launch
+	   if(sad$inputSorNRun){
+   	   sad$sad <- switch(input$sadsad_type,
+            "lnorm" = sim_sad(s_pool=sad$S, n_sim=sad$N, sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef), fix_s_sim = TRUE),
+            "geom" = sim_sad(s_pool=debounced_sadS(), n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(prob=input$sadcoef), fix_s_sim = TRUE),
+            "ls" = sim_sad(s_pool=NA, n_sim=debounced_sadN(), sad_type=input$sadsad_type, sad_coef = list(N=debounced_sadN(), alpha=as.numeric(input$sadcoef)), fix_s_sim = TRUE)
+         )
+	   }
+	}, ignoreNULL = FALSE)   # if TRUE, the fact that input$sadRestart is NULL before being clicked on once also prevents debounced_sadS() and debounced_sadN() to trigger the event
 	
-	output$sadsad_plots <- renderPlot({
-	   par(mfrow=c(1,2))
-	   plot(sadsim.sad(), method = "octave")
-		plot(sadsim.sad(), method = "rank")
-	})
 	
 
+	observeEvent(input$sadAddSpecies, {
+	   # S
+	   newSpeciesNumbers <- (sad$S+1):(sad$S + input$sadNewS)
+	   sad$S <- sad$S + input$sadNewS
+	   # SAD
+	   sad$sad <- c(sad$sad, rep(input$sadNewN, input$sadNewS))
+	   names(sad$sad)[newSpeciesNumbers] <- paste0("species", newSpeciesNumbers)
+	   class(sad$sad) <- c("sad", "integer")
+	   # Update input$sadS
+	   updateNumericInput(session, inputId = 'sadS', value = sad$S)
+	   # Update input$sadN
+	   updateNumericInput(session, inputId = 'sadN', value = sad$N)
+	   sad$inputSorNRun <- FALSE
+	})
+
+	output$sadNewStext <- renderText(paste0(sad$S, " species"))
+	
+	output$sadsad_plots <- renderPlot({
+	   req(sad$sad)
+	   par(mfrow=c(1,2))
+	   plot(sad$sad, method = "octave")
+		plot(sad$sad, method = "rank")
+	})
+	
+	# output$sadCommunity_text <- renderText(paste0("sad$S=", sad$S, ", debounced_sadS=", debounced_sadS(), ", sad$N=", sad$N, ", debounced_N=", debounced_sadN(),", and length spe$sad: ", length(sad$sad), ", and class spe$sad: ", class(sad$sad)[1], ", last species name=", names(sad$sad)[length(sad$sad)], ", inputSRun is ", sad$inputSorNRun))
+	
+	
+	
 	#########################################################################################################
 	# SPACE - DISTRIBUTION SIMULATION TAB
   
@@ -1763,82 +1812,7 @@ shinyServer(function(input, output, session) {
 	
 	
 	
-	# SPECIES BY SPECIES SIMULATION
-	# spe prefix
-	
-	
-	speSinitial <- 5
-	speN <- 100
-	spesad_type <- "lnorm"
-	specoef <- 1
-	
-   spe <- reactiveValues(S = speSinitial,
-                         sad = sim_sad(s_pool=speSinitial, n_sim=speN, sad_type=spesad_type, sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE),
-                         inputSRun = TRUE)
-	# S
-   observeEvent(input$speS, {
-      spe$S <- input$speS
-   })
-   
-   shinyjs::onclick("speS", expr = {   # onclick() runs the expression only when the ID element is clicked
-      spe$inputSRun <- TRUE
-   })
-   
-   spesim.sadTrigger <- reactive({
-	   input$speS
-	   input$speRestart
-	})
-   
-   debounced_spesim.sadTrigger <- debounce(r = spesim.sadTrigger, millis=100)   # debounced to make sure that the observeEvent on the trigger is activated only after spe$inputSRun was set to TRUE after a click on input$S
-	
-	# SAD
-	observeEvent(debounced_spesim.sadTrigger(), {
-	   
-	   # req(input$specoef)
-	   # req(debounced_speS)
-	   if(spe$inputSRun) {
-   	   isolate({
-      	   sad <- switch(spesad_type,
-      	          "lnorm" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="lnorm", sad_coef = list(cv_abund=specoef), fix_s_sim = TRUE),
-      	          "geom" = sim_sad(s_pool=spe$S, n_sim=speN, sad_type="geom", sad_coef = list(prob=specoef), fix_s_sim = TRUE)
-      	   )
-            spe$sad <- sad
-   	   })
-	   }
-	})
-	
-   
-   
-	observeEvent(input$speAddSpecies, {
-	   # S
-	   newSpeciesNumbers <- (spe$S+1):(spe$S + input$speNewS)
-	   spe$S <- spe$S + input$speNewS
-	   # SAD
-	   spe$sad <- c(spe$sad, rep(input$speNewN, input$speNewS))
-	   names(spe$sad)[newSpeciesNumbers] <- paste0("species", newSpeciesNumbers)
-	   class(spe$sad) <- c("sad", "integer")
-	   # Update input$speS
-	   updateNumericInput(session, inputId = 'speS', value = spe$S)
-	   spe$inputSRun <- FALSE
-	})
-	
-	output$speNewStext <- renderText(paste0(spe$S, " species")) 
-	
-	
-	output$spesad_plots <- renderPlot({
-	   req(spe$sad)
-	   par(mfrow=c(1,2))
-	   plot(spe$sad, method = "octave")
-	   plot(spe$sad, method = "rank")
-	})
-	
-	
-	output$speCommunity_text <- renderText(paste0(spe$S, " species, and length spe$sad: ", length(spe$sad), ", and class spe$sad: ", class(spe$sad)[1], ", last species name=", names(spe$sad)[length(spe$sad)], ", inputSRun is ", spe$inputSRun))
-	
-	
-	
-	
-	
+
 	
 	
 	
