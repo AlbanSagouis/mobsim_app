@@ -16,9 +16,10 @@ library(DT)
 source("extras/help/Help.r", local = TRUE)
 source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
+source("extras/initial_values.R", local = TRUE)
 # Define UI for slider demo application
   
-navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population simulation",
+navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribution simulation",
    shinyjs::useShinyjs(),
            
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
@@ -30,12 +31,12 @@ navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population
             sliderInput("sadN", label = p("Number of individuals", tags$style(type="text/css", "#sadN_icon {vertical-align: top;}"),
                                          popify(bsButton("sadN_icon", label="", icon=icon("question-circle"), size="extra-small"),
                                                 title = Help$N$title, content = Help$N$content, placement = "bottom", trigger = "focus")), # , style="info"
-                         min=10, max=5000, value=1000, step=10, ticks=F),
+                         min=10, max=5000, value=initial$N, step=10, ticks=F),
          	
          	sliderInput("sadS", label = p("Species Richness", tags$style(type="text/css", "#sadS_icon {vertical-align: top;}"),
          	                             popify(bsButton("sadS_icon", label="", icon=icon("question-circle"), size="extra-small"),
          	                                    title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "focus")),
-         	             min=5, max=500, value=5, step=5, ticks=F),
+         	             min=5, max=500, value=initial$S, step=5, ticks=F),
          
             selectizeInput("sadsad_type", label = p(Labels$sad_type, tags$style(type="text/css", "#sadsad_type_icon {vertical-align: top;}"),
 		                                     popify(bsButton("sadsad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
@@ -52,7 +53,7 @@ navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population
             )
          ),
          mainPanel(
-            plotOutput("sadsad_plots"),
+            plotOutput("sadsad_plots")
             # textOutput("sadCommunity_text")
          )
       )
@@ -61,18 +62,19 @@ navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population
 	tabPanel("2 Space - Distribution simulation",
       sidebarLayout(
          sidebarPanel(
+            # h4("Creating a community"),
          	fluidRow(
                column(width = 6, 
                       sliderInput("spaN", label = p("Number of individuals", tags$style(type="text/css", "#spaN_icon {vertical-align: top;}"),
                                             popify(bsButton("spaN_icon", label="", icon=icon("question-circle"), size="extra-small"),
                                                    title = Help$N$title, content = Help$N$content, placement = "bottom", trigger = "focus")),
-                            min=10, max=5000, value=1000, step=10, ticks=F)
+                            min=10, max=initial$Nmax, value=initial$N, step=10, ticks=F)
                ),
             	column(width = 6,
                	sliderInput("spaS", label = p("Species Richness", tags$style(type="text/css", "#spaS_icon {vertical-align: top;}"),
                	                             popify(bsButton("spaS_icon", label="", icon=icon("question-circle"), size="extra-small"),
                	                                    title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "focus")),
-               	             min=5, max=500, value=5, step=5, ticks=F)
+               	             min=5, max=500, value=initial$S, step=5, ticks=F)
          	   )
          	),
          	fluidRow(
@@ -91,16 +93,16 @@ navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population
          	fluidRow(
          	   column(width = 6,
          	          selectizeInput(inputId="spaspatdist", p(Labels$spatdist, tags$style(type="text/css", "#spaspatdist_icon {vertical-align: top;}"),
-         	                                                  popify(bsButton("spaspatdist_icon", label="", icon=icon("question-circle"), size="extra-small"),
-         	                                                         title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")),
-         	                         choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
+         	            popify(bsButton("spaspatdist_icon", label="", icon=icon("question-circle"), size="extra-small"),
+         	               title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")),
+         	                  choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
          	   ),
          	   
          	   column(width = 6,
                	textInput(inputId="spaspatcoef",label=p(Labels$spatcoef, tags$style(type="text/css", "#spaspatcoef_icon {vertical-align: top;}"),
-               	                                         popify(bsButton("spaspatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
-               	                                                  title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
-               	                value="1")
+               	   popify(bsButton("spaspatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
+               	      title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
+               	         value = initial$mother_points)
                )
          	),
          	
@@ -111,11 +113,36 @@ navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population
          	             popify(
          	                bsButton("spaspatagg_icon", label="", icon=icon("question-circle"), size="extra-small"),
          	                title = Help$spatagg$title,
-         	                content = Help$spatagg$content, trigger = "focus")), value = 0.1)
+         	                content = Help$spatagg$content, trigger = "focus")), value = initial$sigma)
          	   ),
          	   column(width = 6,
-         	          actionButton(inputId="spaRestart", label="Restart Simulation")
+         	          actionButton(inputId="spaRestart", label="Restart Simulation"),
+         	          checkboxInput(inputId = "showAddSpeciesPanel", label = "Add species", value = FALSE)
          	   )
+         	),
+         	conditionalPanel(
+         	   condition = "input.showAddSpeciesPanel",
+            	h4("Adding a community"),
+            	fluidRow(
+            	   column(width = 6, numericInput(inputId = "spaNewN", label = "Added individuals", value = 100, min=1, max=5000, step=1)),
+            	   column(width = 6, numericInput(inputId = "spaNewS", label = "Number of new species", value = 1, min=1, max=1000, step=1))
+            	),
+            	fluidRow(
+            	   column(width = 4, selectizeInput("spaNewsad_type", label = Labels$sad_type,
+            	      choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm")),
+            	   column(width = 8, uiOutput("spaNewCVslider"))
+            	),
+            	fluidRow(
+               	column(width = 4, selectizeInput(inputId="spaNewspatdist", Labels$spatdist, choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
+                  ),
+                  column(width = 4,
+                         textInput(inputId="spaNewspatcoef",label=Labels$spatcoef, value="1")
+                  ),
+                  column(width = 4, 
+                         textInput(inputId = "spaNewspatagg", label = Labels$spatagg, value = 0.1)
+                  )
+            	),
+               actionButton(inputId = "spaAddSpecies", label = "Add species")
          	),
          	plotOutput("spasad_plots"),
          	radioButtons("exercise_number", "Exercise number",
@@ -124,6 +151,7 @@ navbarPage("Visualization of biodiversity pattern", selected="1 SAD - Population
          
          
          mainPanel(
+            textOutput("spaCommunity_text"),
             plotOutput("spacom_plots")
          )
       )

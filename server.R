@@ -23,6 +23,7 @@ source("extras/code/SAC_spatial.R", local = TRUE)
 source("extras/help/Help.r", local = TRUE)
 source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
+source("extras/initial_values.R", local = TRUE)
 
 comparativeTable_names <- c('sim_ID','method','n_species','n_individuals','seed_simulation','n_quadrats','quadrat_area','seed_sampling',
 	 'gamma_richness','gamma_ens_shannon','gamma_ens_simpson',
@@ -40,7 +41,7 @@ shinyServer(function(input, output, session) {
 	
 	# Plotting preferences
 	spacolor_palette_individuals <- reactive({
-	   do.call(color_palette(), list(n=debounced_spaS()))
+	   do.call(color_palette(), list(n=spa$S))
 	})
 	color_palette_individuals <- reactive({
       do.call(color_palette(), list(n=input$S))
@@ -52,29 +53,24 @@ shinyServer(function(input, output, session) {
 	
 	#########################################################################################################
 	# SAD -POPULATION SIMULATION TAB
-  
-	sadSinitial <- 5
-	sadNinitial <- 100
-	sadsad_type <- "lnorm"
-	sadcoefInitial <- 1
 	
-	sad <- reactiveValues(S = sadSinitial,
-	                      N = sadNinitial,
-	                      sad = sim_sad(s_pool=sadSinitial, n_sim=sadNinitial, sad_type=sadsad_type, sad_coef = list(cv_abund=sadcoefInitial), fix_s_sim = TRUE),
+	sad <- reactiveValues(S = initial$S,
+	                      N = initial$N,
+	                      sad = sim_sad(s_pool=initial$S, n_sim=initial$N, sad_type=initial$sad_type, sad_coef = list(cv_abund=initial$sad_coef_lnorm), fix_s_sim = TRUE),
 	                      inputSorNRun = TRUE)
 	# S
 	observeEvent(input$sadS, {
 	   sad$S <- input$sadS
-	}, priority = 10)
+	})
 	# N
 	observeEvent(input$sadN, {
 	   sad$N <- input$sadN
-	}, priority = 10)	
+	})	
 	
   # update range for species richness, an observed species has minimum one individual
-	# observeEvent(input$sadN,{
-	# 	updateSliderInput(session, "sadS", max=debounced_sadN(), value=debounced_sadS())
-	# })
+	observeEvent(debounced_sadN(),{
+		updateSliderInput(session, "sadS", max=debounced_sadN(), value=debounced_sadS())
+	})
 
 	output$sadCVslider <- renderUI({
 		switch(input$sadsad_type,
@@ -110,8 +106,11 @@ shinyServer(function(input, output, session) {
 	   debounced_sadS()
 	   debounced_sadN()
 	   input$sadRestart
-	   }, {
-	   req(input$sadcoef)   # to avoid an arror at launch
+   }, {
+	   validate(
+	      need(debounced_sadN() >= debounced_sadS(), "N must be higher than S")
+	   )
+      req(input$sadcoef)   # to avoid an arror at launch
 	   if(sad$inputSorNRun){
    	   sad$sad <- switch(input$sadsad_type,
             "lnorm" = sim_sad(s_pool=sad$S, n_sim=sad$N, sad_type=input$sadsad_type, sad_coef = list(cv_abund=input$sadcoef), fix_s_sim = TRUE),
@@ -147,13 +146,30 @@ shinyServer(function(input, output, session) {
 		plot(sad$sad, method = "rank")
 	})
 	
-	# output$sadCommunity_text <- renderText(paste0("sad$S=", sad$S, ", debounced_sadS=", debounced_sadS(), ", sad$N=", sad$N, ", debounced_N=", debounced_sadN(),", and length spe$sad: ", length(sad$sad), ", and class spe$sad: ", class(sad$sad)[1], ", last species name=", names(sad$sad)[length(sad$sad)], ", inputSRun is ", sad$inputSorNRun))
+	# output$sadCommunity_text <- renderText(paste0("sad$S=", sad$S, ", debounced_sadS=", debounced_sadS(), ", sad$N=", sad$N, ", debounced_N=", debounced_sadN(),", and length sad$sad: ", length(sad$sad), ", and class sad$sad: ", class(sad$sad)[1], ", last species name=", names(sad$sad)[length(sad$sad)], ", inputSRun is ", sad$inputSorNRun))    # debug line
 	
 	
 	
 	#########################################################################################################
 	# SPACE - DISTRIBUTION SIMULATION TAB
-  
+ 
+	spa <- reactiveValues(S = initial$S,
+	                      N = initial$N,
+	                      simcom = sim_thomas_community(s_pool = initial$S, n_sim = initial$N, 
+	                                                 sigma=initial$sigma, mother_points=initial$mother_points,
+	                                                 sad_type = initial$sad_type, sad_coef=list(cv_abund=initial$sad_coef_lnorm),
+	                                                 fix_s_sim = T),
+	                      inputSorNRun = TRUE)
+	# S and N
+	observeEvent({
+	   input$spaS
+	   input$spaN
+	   }, {
+	   spa$S <- input$spaS
+	   spa$N <- input$spaN
+	})
+		
+	
   # update range for species richness, an observed species has minimum one individual
 	observeEvent(debounced_spaN(),{
 	   updateSliderInput(session, "spaS", min=5, max=debounced_spaN(), value=debounced_spaS(), step=5)
@@ -169,13 +185,33 @@ shinyServer(function(input, output, session) {
 	          "geom"=sliderInput("spacoef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type="text/css", "#spaCVslider_icon {vertical-align: top;}"),
 	                                                  popify(bsButton("spaCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
 	                                                         title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
-	                             value=0.5,min=0,max=1,step=0.05, ticks=F),
+	                             value=0.5, min=0, max=1 ,step=0.05, ticks=F),
 	          
 	          "ls"=textInput("spacoef", label = p("Fisher's alpha parameter", tags$style(type="text/css", "#spaCVslider_icon {vertical-align: top;}"),
 	                                              popify(bsButton("spaCVslider_icon", label="", icon=icon("question-circle"), size="extra-small"),
 	                                                     title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")),
 	                         value = 10)
 	   )
+	})
+	
+	output$spaNewCVslider <- renderUI({
+	   switch(input$spaNewsad_type,
+	          "lnorm"=sliderInput("spaNewcoef", label = "CV (abundance)", value=1, min=0, max=5, step=0.1, ticks=F),
+	          
+	          "geom"=sliderInput("spaNewcoef", label = "Probability of success in each trial. 0 < prob <= 1", value=0.5, min=0, max=1 ,step=0.05, ticks=F),
+	          
+	          "ls"=textInput("spaNewcoef", label = "Fisher's alpha parameter", value = 10)
+	   )
+	})
+	
+	shinyjs::onclick(id = "spaS", expr = {   # onclick() runs its expression only when the ID element is clicked
+	   spa$inputSorNRun <- TRUE
+	})
+	shinyjs::onclick(id = "spaN", expr = {
+	   spa$inputSorNRun <- TRUE
+	})
+	observeEvent(input$spaRestart, {   # observeEvent instead of onclick because onclick would occur after other observeEvent, which is too late
+	   spa$inputSorNRun <- TRUE
 	})	
 	
 	reactive_spaS <- reactive(input$spaS)
@@ -185,24 +221,30 @@ shinyServer(function(input, output, session) {
 	debounced_spaN <- debounce(r = reactive_spaN, millis=1000)
 	
 	
-	spasim.com <- reactive({
+	observeEvent({
+	   debounced_spaS()
+	   debounced_spaN()
 	   input$spaRestart
-	   req(input$spacoef)
-	   
-	   spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spaspatagg), ",")))
-	   spatcoef_num <- as.numeric(unlist(strsplit(trimws(input$spaspatcoef), ",")))
-	   
-	   if(input$spaspatdist=="n.mother") n.mother <- spatcoef_num else n.mother <- NA
-	   if(input$spaspatdist=="n.cluster") n.cluster <- spatcoef_num else n.cluster <- NA
-	   
-	   simulation_parameters <- list(mother_points = n.mother,
-                                   cluster_points = n.cluster,
-                                   xmother = NA,
-                                   ymother = NA,
-                                   xrange = c(0,1),
-                                   yrange = c(0,1))
-
-	   switch(input$spasad_type,
+	}, {
+	   validate(
+	      need(debounced_spaN() >= debounced_spaS(), "N must be higher than S")
+	   )
+	   req(input$spacoef)   # to avoid an arror at launch
+      if(spa$inputSorNRun){
+         
+   	   spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spaspatagg), ",")))
+   	   spatcoef_num <- as.numeric(unlist(strsplit(trimws(input$spaspatcoef), ",")))
+   	   
+   	   if(input$spaspatdist=="n.mother") n.mother <- spatcoef_num else n.mother <- NA
+   	   if(input$spaspatdist=="n.cluster") n.cluster <- spatcoef_num else n.cluster <- NA
+   	   
+   	   simulation_parameters <- list(mother_points = n.mother,
+                                      cluster_points = n.cluster,
+                                      xmother = NA,
+                                      ymother = NA,
+                                      xrange = c(0,1),
+                                      yrange = c(0,1))
+   	   spa$simcom <- switch(input$spasad_type,
 	          "lnorm"=sim_thomas_community(s_pool = debounced_spaS(), n_sim = debounced_spaN(), 
 	                                       sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 	                                       sad_type = input$spasad_type, sad_coef=list(cv_abund=input$spacoef),
@@ -218,26 +260,91 @@ shinyServer(function(input, output, session) {
 	                                    sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
 	                                    fix_s_sim = T, seed = NULL,
 	                                    xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
-	   )
-	})
+	      )
+      }
+	}, ignoreNULL = FALSE)   # if TRUE, the fact that input$sadRestart is NULL before being clicked on once also prevents debounced_sadS() and debounced_sadN() to trigger the event
 	
 
 	
+	# ADD SPECIES
+	observeEvent(input$spaAddSpecies, {
+	   validate(
+	      need(input$spaNewN >= input$spaNewS, "N must be higher than S")
+	   )
+	   isolate({
+   
+	  	   # SIMCOM
+
+   	   spatagg_num <- as.numeric(unlist(strsplit(trimws(input$spaNewspatagg), ",")))
+   	   spatcoef_num <- as.numeric(unlist(strsplit(trimws(input$spaNewspatcoef), ",")))
+   	   
+   	   if(input$spaNewspatdist=="n.mother") n.mother <- spatcoef_num else n.mother <- NA
+   	   if(input$spaNewspatdist=="n.cluster") n.cluster <- spatcoef_num else n.cluster <- NA
+   	   
+   	   simulation_parameters <- list(mother_points = n.mother,
+   	                                 cluster_points = n.cluster,
+   	                                 xmother = NA,
+   	                                 ymother = NA,
+   	                                 xrange = c(0,1),
+   	                                 yrange = c(0,1))
+   	   
+         simcomAddition <- switch(input$spaNewsad_type,
+   	                        "lnorm"=sim_thomas_community(s_pool = input$spaNewS, n_sim = input$spaNewN, 
+   	                                                     sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+   	                                                     sad_type = input$spasad_type, sad_coef=list(cv_abund=input$spaNewcoef),
+   	                                                     fix_s_sim = T, seed = NULL,
+   	                                                     xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+   	                        "geom"=sim_thomas_community(s_pool = input$spaNewS, n_sim = input$spaNewN,
+   	                                                    sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+   	                                                    sad_type = input$spasad_type, sad_coef=list(prob=input$spaNewcoef),
+   	                                                    fix_s_sim = T, seed = NULL,
+   	                                                    xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+   	                        "ls"=sim_thomas_community(s_pool = NA, n_sim = input$spaNewN,
+   	                                                  sad_type = input$spasad_type, sad_coef=list(N=input$spaNewN,alpha=as.numeric(input$spaNewcoef)),
+   	                                                  sigma=spatagg_num, mother_points=simulation_parameters$mother_points, cluster_points=simulation_parameters$cluster_points, xmother=simulation_parameters$xmother, ymother=simulation_parameters$ymother,
+   	                                                  fix_s_sim = T, seed = NULL,
+   	                                                  xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
+         )
+
+
+   	   # Renaming added species
+   	   simcomAddition$census$species <- paste0("species_", as.integer(gsub(x = simcomAddition$census$species, pattern = "species_", replacement = "")) + spa$S)
+      	spa$simcom$census <- rbind(spa$simcom$census, simcomAddition$census)
+   	   class(spa$simcom) <- c("community")
+   	   
+   	   # S
+   	   spa$S <- spa$S + input$spaNewS
+   	   # N
+   	   spa$N <- spa$N + input$spaNewN
+   	   
+   	   # Update input$spaS
+   	   updateNumericInput(session, inputId = 'spaS', value = spa$S)
+   	   # Update input$spaN
+   	   if(spa$N > initial$Nmax) {
+   	      updateNumericInput(session, inputId = 'spaN', max = spa$N + 1000, value = spa$N)
+         } else {
+            updateNumericInput(session, inputId = 'spaN', value = spa$N)
+   	   }
+   	   
+   	   spa$inputSorNRun <- FALSE
+	   })	   
+	})
+	
+	
 	output$spasad_plots <- renderPlot({
-		plot(community_to_sad(spasim.com()), method = "rank")
+		plot(community_to_sad(spa$simcom), method = "rank")
 	})
 	
 	output$spacom_plots <- renderPlot({
-	   sac1   <- spec_sample_curve(spasim.com(), method="rarefaction")
-	   divar1 <- divar(spasim.com(), exclude_zeros=F)
-	   dist1  <- dist_decay(spasim.com())
-	  
 	   par(mfrow = c(2, 2))
-	   
-		plot(spasim.com(), main = "Community map", col=spacolor_palette_individuals())
-		abline(h=spasim.com()$y_min_max, v=spasim.com()$x_min_max, lty = 3)
+		plot(spa$simcom, main = "Community map", col=spacolor_palette_individuals())
+		abline(h=spa$simcom$y_min_max, v=spa$simcom$x_min_max, lty = 3)
 	   
 		if(input$exercise_number == 3)   {
+   	   sac1   <- spec_sample_curve(spa$simcom, method="rarefaction")
+   	   divar1 <- divar(spa$simcom, exclude_zeros=F)
+   	   dist1  <- dist_decay(spa$simcom)
+	  
 	      plot(sac1, log = rarefaction_curves_loglog())
 	      plot(divar1)
 	      plot(dist1)
@@ -245,6 +352,7 @@ shinyServer(function(input, output, session) {
 		
 	}, height = 800)
 	
+	output$spaCommunity_text <- renderText(paste0("spa$S=", spa$S, ", debounced_spaS=", debounced_spaS(), ", spa$N=", spa$N, ", debounced_N=", debounced_spaN(),", and nrow simcom$census: ", nrow(spa$simcom$census), ", and class spa$simcom: ", class(spa$simcom), ", last species name=", spa$simcom$census[nrow(spa$simcom$census), "species"], ", inputSorNRun is ", spa$inputSorNRun))    # debug line
 	
 	
 	
@@ -256,8 +364,8 @@ shinyServer(function(input, output, session) {
 	   input$spaRestart
 	   
 	   data.frame(Community = "",
-	              n_species = length(levels(spasim.com()$census$species)),
-	              n_individuals = nrow(spasim.com()$census))
+	              n_species = length(levels(spa$sad$census$species)),
+	              n_individuals = nrow(spa$sad$census))
 	})
 	## Sampling parameters
 	
@@ -283,7 +391,7 @@ shinyServer(function(input, output, session) {
 	bsasampling_alpha_summary_table <- reactive({
       quadrats_coordinates <- bsasampling_quadrats()$xy_dat
       temp <- 	as.data.frame(t(round(sapply(1:nrow(quadrats_coordinates), function(i) {
-         div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$bsaarea_of_quadrats), ysize=sqrt(input$bsaarea_of_quadrats), comm=spasim.com())
+         div_rect(x0=quadrats_coordinates$x[i], y0=quadrats_coordinates$y[i], xsize=sqrt(input$bsaarea_of_quadrats), ysize=sqrt(input$bsaarea_of_quadrats), comm=spa$sad)
       }), 3)))[,c('n_species','n_endemics','ens_shannon','ens_simpson')]
       funs <- list(min=min, max=max, mean=mean, sd=sd)
       data.frame(Alpha_scale=colnames(temp), round(sapply(funs, mapply, temp),3))
@@ -295,7 +403,7 @@ shinyServer(function(input, output, session) {
 	bsasampling_quadrats <- reactive({
 	   input$bsanew_sampling_button
 	   
-	   sample_quadrats(comm=spasim.com(), n_quadrats=input$bsanumber_of_quadrats, quadrat_area=input$bsaarea_of_quadrats, method = "random", avoid_overlap=T, plot=F, seed = NULL)
+	   sample_quadrats(comm=spa$sad, n_quadrats=input$bsanumber_of_quadrats, quadrat_area=input$bsaarea_of_quadrats, method = "random", avoid_overlap=T, plot=F, seed = NULL)
 	})
 	
 	bsararefaction_curves_list <- reactive({
@@ -306,7 +414,7 @@ shinyServer(function(input, output, session) {
 	
 	output$bsasampling_plot <- renderPlot({
       quadrats_coordinates <- bsasampling_quadrats()$xy_dat
-      plot(spasim.com(), main = "Community distribution", col= spacolor_palette_individuals())
+      plot(spa$sad, main = "Community distribution", col= spacolor_palette_individuals())
       graphics::rect(quadrats_coordinates$x,
                      quadrats_coordinates$y,
                      quadrats_coordinates$x + sqrt(input$bsaarea_of_quadrats),
@@ -324,7 +432,7 @@ shinyServer(function(input, output, session) {
 	   # input$rarefaction_curves_loglog        # update plot when log axes rule change
 	   # 
 	   # isolate({
-	      plot(spec_sample_curve(spasim.com(), method="rarefaction"), log = rarefaction_curves_loglog())
+	      plot(spec_sample_curve(spa$sad, method="rarefaction"), log = rarefaction_curves_loglog())
 	      lines(rare_curve(apply(bsasampling_quadrats()$spec_dat, 2, sum)), lwd=3, col="limegreen")  	# Drawing gamma scale curve
 	      lapply(bsararefaction_curves_list(), lines, lwd=2, col=adjustcolor("green", alpha=0.5))	# Drawing all alpha scale curves
 
@@ -334,13 +442,13 @@ shinyServer(function(input, output, session) {
 	   })
 	
 	output$bsadivar_plot <- renderPlot({
-	   divar1 <- divar(spasim.com(), exclude_zeros=F)
+	   divar1 <- divar(spa$sad, exclude_zeros=F)
 	   plot(divar1)
-	   abline(v = input$bsaarea_of_quadrats * input$bsanumber_of_quadrats / ((spasim.com()$x_min_max[2] - spasim.com()$x_min_max[1]) * (spasim.com()$y_min_max[2] - spasim.com()$y_min_max[1])), lty = 2, lwd = 2) # proportion of the total area sampled
+	   abline(v = input$bsaarea_of_quadrats * input$bsanumber_of_quadrats / ((spa$sad$x_min_max[2] - spa$sad$x_min_max[1]) * (spa$sad$y_min_max[2] - spa$sad$y_min_max[1])), lty = 2, lwd = 2) # proportion of the total area sampled
 	})
 	
 	output$bsadist_decay_plot <- renderPlot({
-	   dist1 <- dist_decay(spasim.com())
+	   dist1 <- dist_decay(spa$sad)
 	   plot(dist1)
 	   
 	   dist_quadrats <- dist_decay_quadrats(bsasampling_quadrats(), method = "bray", binary = F)
