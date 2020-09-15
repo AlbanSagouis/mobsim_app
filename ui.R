@@ -3,7 +3,7 @@
 # run the application by clicking 'Run App' above.
 #
 # Find out more about building applications with Shiny here:
-# 
+#
 #    http://shiny.rstudio.com/
 #
 
@@ -18,12 +18,12 @@ source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 source("extras/initial_values.R", local = TRUE)
 # Define UI for slider demo application
-  
-navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribution simulation",
+
+navbarPage("Visualization of biodiversity pattern", selected="Introduction",
    shinyjs::useShinyjs(),
-           
+
 	tabPanel("Introduction", includeMarkdown("introduction.md")),
-	
+
 	tabPanel("1 SAD - Population simulation",
       sidebarLayout(
          sidebarPanel(
@@ -32,17 +32,17 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
                                          popify(bsButton("sadN_icon", label="", icon=icon("question-circle"), size="extra-small"),
                                                 title = Help$N$title, content = Help$N$content, placement = "bottom", trigger = "focus")), # , style="info"
                          min=10, max=5000, value=initial$N, step=10, ticks=F),
-         	
+
          	sliderInput("sadS", label = p("Species Richness", tags$style(type="text/css", "#sadS_icon {vertical-align: top;}"),
          	                             popify(bsButton("sadS_icon", label="", icon=icon("question-circle"), size="extra-small"),
          	                                    title = Help$S$title, content = Help$S$content, placement = "bottom", trigger = "focus")),
          	             min=5, max=500, value=initial$S, step=5, ticks=F),
-         
+
             selectizeInput("sadsad_type", label = p(Labels$sad_type, tags$style(type="text/css", "#sadsad_type_icon {vertical-align: top;}"),
 		                                     popify(bsButton("sadsad_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
 		                                            title = Help$select_sad_type$title,
 		                                            content = Help$select_sad_type$content,
-		                                            placement = "bottom", trigger = "focus")), 
+		                                            placement = "bottom", trigger = "focus")),
 		               choices=c("lognormal"="lnorm","geometric"="geom","Fisher's log-series"="ls"), selected = "lnorm"),
             uiOutput("sadCVslider"),
             actionButton(inputId="sadRestart",label="Restart Simulation"),
@@ -58,13 +58,13 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
          )
       )
    ),
-	
+
 	tabPanel("2 Space - Distribution simulation",
       sidebarLayout(
          sidebarPanel(
             # h4("Creating a community"),
          	fluidRow(
-               column(width = 6, 
+               column(width = 6,
                       sliderInput("spaN", label = p("Number of individuals", tags$style(type="text/css", "#spaN_icon {vertical-align: top;}"),
                                             popify(bsButton("spaN_icon", label="", icon=icon("question-circle"), size="extra-small"),
                                                    title = Help$N$title, content = Help$N$content, placement = "bottom", trigger = "focus")),
@@ -89,7 +89,7 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
          	   ),
          	   column(width = 6, uiOutput("spaCVslider"))
          	),
-         	
+
          	fluidRow(
          	   column(width = 6,
          	          selectizeInput(inputId="spaspatdist", p(Labels$spatdist, tags$style(type="text/css", "#spaspatdist_icon {vertical-align: top;}"),
@@ -97,17 +97,17 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
          	               title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")),
          	                  choices = c("Number of mother points"="n.mother", "Number of clusters"="n.cluster"), selected = "n.mother")
          	   ),
-         	   
+
          	   column(width = 6,
                	textInput(inputId="spaspatcoef",label=p(Labels$spatcoef, tags$style(type="text/css", "#spaspatcoef_icon {vertical-align: top;}"),
                	   popify(bsButton("spaspatcoef_icon", label="", icon=icon("question-circle"), size="extra-small"),
                	      title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
-               	         value = initial$mother_points)
+               	         value = initial$n_mother_points)
                )
          	),
-         	
+
          	fluidRow(
-         	   column(width = 6, 
+         	   column(width = 6,
          	          textInput(inputId = "spaspatagg", label = p(
          	             Labels$spatagg, tags$style(type="text/css", "#spaspatagg_icon {vertical-align: top;}"),
          	             popify(
@@ -138,7 +138,7 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
                   column(width = 4,
                          textInput(inputId="spaNewspatcoef",label=Labels$spatcoef, value="1")
                   ),
-                  column(width = 4, 
+                  column(width = 4,
                          textInput(inputId = "spaNewspatagg", label = Labels$spatagg, value = 0.1)
                   )
             	),
@@ -148,16 +148,16 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
          	radioButtons("exercise_number", "Exercise number",
          	             choices = 2:3, selected = 2, inline = TRUE)
          ),
-         
-         
+
+
          mainPanel(
             textOutput("spaCommunity_text"),
             plotOutput("spacom_plots")
          )
       )
    ),
-	
-	
+
+
 	tabPanel("3 Basic Sampling",
 	         sidebarLayout(
 	            sidebarPanel(
@@ -172,7 +172,7 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 	               tableOutput("bsasampling_gamma_table"),
 	               tableOutput("bsasampling_alpha_summary_table")
 	            ),
-	            
+
 	            mainPanel(
 	               fluidRow(
 	                  column(width = 6, plotOutput("bsasampling_plot")),
@@ -185,13 +185,13 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 	            )
 	         )
 	),
-	         
-	      
-	      
-	      
-	
-	
-	tabPanel("MOBsim - Simulation", 
+
+
+
+
+
+
+	tabPanel("MOBsim - Simulation",
       # tags$style(".popover{
       # container: body;
       #            }"),
@@ -204,32 +204,32 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 		                                    popify(bsButton("N_icon", label="", icon=icon("question-circle"), size="extra-small"),
 		                                    title = Help$N$title, content=Help$N$content, placement = "bottom", trigger = "focus")), # , style="info"
 		                      min=10, max=5000, value=1000, step=10, ticks=F),
-					
+
 					sliderInput("S", label = p("Species Richness", tags$style(type="text/css", "#S_icon {vertical-align: top;}"),
 					                           popify(bsButton("S_icon", label="", icon=icon("question-circle"), size="extra-small"),
 					                                  title = Help$S$title, content=Help$S$content, placement = "bottom", trigger = "focus")),
 					             min=5, max=500, value=5, step=5, ticks=F),
-					
+
                selectizeInput("method_type", label=p("Method", tags$style(type="text/css", "#method_type_icon {vertical-align: top;}"),
                                                      popify(bsButton("method_type_icon", label="", icon=icon("question-circle"), size="extra-small"),
                                                              title= Help$method_type$title, content = Help$method_type$content,
                                                              placement="bottom", options = list(container = "body"), trigger = "focus")),
                               choices=c("Random mother points"="random_mother_points", "Click for mother points"="click_for_mother_points", "Click for species ranges"="click_for_species_ranges", "User community file"="uploading_community_data"), selected="Random mother points", multiple=FALSE)
-					
+
 					# checkboxInput("sample_setting_button", "Sample setting", value=FALSE)
 				),
-				
+
 				column(width=3,
                uiOutput("select_sad_type"),
 			      uiOutput("CVslider"),
 
 			      uiOutput("text_spat_agg"),
 			      uiOutput("spatdist"),
-					
+
 					uiOutput("spatcoef"),
 					uiOutput("community_uploading_tool")
 				),
-				
+
 				column(width=3,
 					uiOutput("species_ID_input"),
 					plotOutput(outputId="on_plot_selection",
@@ -242,7 +242,7 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 						# column(width=6, actionButton(inputId="resetBrush", label="Reset brush"))
 					# uiOutput("info")
 				),
-				
+
 				column(width=3,
 					div(style = 'height:50vh; overflow-y: scroll',
 						tableOutput("datatable"),
@@ -257,35 +257,35 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 				)
 			)
 		),
-		
-		
+
+
 		fluidRow(align="center",
 			# Restart action button
 			actionButton(inputId="Restart",label="Restart Simulation"),
 			# Download sim.com action button
 			downloadButton("downloadData", "Download community object"),
 			# Check box
-			checkboxInput(input='keepInteractivePlot', label='Keep this simulation plot', value=FALSE)			
+			checkboxInput(input='keepInteractivePlot', label='Keep this simulation plot', value=FALSE)
 		),
-		
+
 		fluidRow(align="center",
 			# plotOutput("PreviousInteractivePlot", height="600px",width="750px"),
 			# plotOutput("InteractivePlot", height="600px",width="750px")
 			plotOutput("InteractivePlot", height="300px",width="1500px"),
 			plotOutput("PreviousInteractivePlot", height="300px",width="1500px")
 		),
-		
+
 		fluidRow(align="center",
 			# column(width=4, numericInput("plot_saving_width", label="Width in inches", value=15)),
 			# column(width=4, numericInput("plot_saving_height", label="Height in inches", value=3)),
 			# column(width=4, numericInput("plot_saving_reolution", label="Resolution", value=72)),
-			
+
 			column(width=6, selectInput("plot_saving_format", label="Saving format", choices=c("tiff","png"), selected="png")),
 			column(width=6, downloadButton("downloadMobPlot", "Download plot"))
 
 		)
 	),
-	
+
 	tabPanel("Sampling",
       fluidRow(
          column(width = 3, tableOutput("community_summary_table")),
@@ -297,14 +297,14 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 		                                                                trigger= "focus")),
                                         value=0.005, min=0.00001, max=1, step=0.005))
 		   ),
-		
+
 		# column(width=6, numericInput("nrep_for_sampling_simulation", label="Number of simulation repetitions", value=10, min=5, max=200, step=5)),
 		# column(width=6, actionButton("sampling_simulation_button", label="Simulation")),	#, style = "margin-top: 25px;"
 		fluidRow(align = "center",
 		   actionButton("new_sampling_button", label="New sampling"),
 		   actionButton("keepRarefactionCurvesPlot", label='Keep this sampling design')
 		),
-		
+
 		fluidRow(
 			# Simulation
 				# verbatimTextOutput("samplingsimulationsummary", placeholder=FALSE),
@@ -331,12 +331,12 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 				# plotOutput("sampling_distance_decay_plot")
 			)
 		),
-		
+
 		bsPopover(id = "rarefaction_curves_plot", title = Help$rarefaction_curves_plot$title, content = Help$rarefaction_curves_plot$content, trigger = "hover"),
 		bsPopover(id = "sampling_plot", title = Help$sampling_plot$title, content = Help$sampling_plot$content, placement = "top", trigger = "hover")
 	),
-	
-	
+
+
 	tabPanel("Step-by-step",
         # tags$head(tags$style(HTML("
         # . {
@@ -388,10 +388,10 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 				                                               trigger = "focus")),
 				          value="Not specified"),
 				# verbatimTextOutput("debugging_seed"),
-				
+
 				# Restart action button
 				actionButton(inputId="sbsRestart",label="Restart Simulation"),
-				
+
 				# sampling parameters
 				fluidRow(
 					column(width=4,
@@ -426,8 +426,8 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 
 		bsPopover(id="sbskeep_step_icon", title = Help$keep_step$title, content = Help$keep_step$content, placement = "bottom", trigger = "focus", options = NULL)
 	),
-	
-	
+
+
 	tabPanel("Big Table",
 		dataTableOutput("comparativeTable_output"),
 		verbatimTextOutput("comparativeTable_selected_simulations"),
@@ -470,7 +470,7 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
 		hr(),
 
    	bsPopover(id = "comparativeTable_output", title = Help$comparativeTable_output$title, Help$comparativeTable_output$content, trigger = "focus")
-		
+
 	),
 
 	tabPanel("Graphical parameters",
@@ -490,7 +490,7 @@ navbarPage("Visualization of biodiversity pattern", selected="2 Space - Distribu
       ),
 	   bsPopover(id="color_palette", title = Help$color_palette$title, content = Help$color_palette$content, placement = "right", trigger = "focus", options = NULL)
 	)
-	
+
 	# tabPanel("Comparison",
 		# tableOutput("simtab_output"),
 	# )
