@@ -22,7 +22,7 @@ The tool
 
 ## Run the app on the web
 
-The app is hosted at the following url: https://github.com/MoBiodiv/mobsim_app
+The app is hosted at the following url: https://github.com/AlbanSagouis/mobsim_app forked from https://github.com/MoBiodiv/mobsim_app
 
 ## Run the app locally
 
@@ -32,7 +32,7 @@ from the R terminal:
 ```r
 install.packages(c('shiny', 'shinyBS', 'devtools'))
 library(devtools)
-install_github('albansagouis/mobsim')
+install_github('albansagouis/mobsim@master')
 ```
 
 Once those dependencies are installed you can run the app from the R terminal using:
