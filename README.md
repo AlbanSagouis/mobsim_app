@@ -2,7 +2,7 @@
 
 ## Authors
 
-*Katharina Gerstner, Felix May*
+*Katharina Gerstner, Felix May, Alban Sagouis*
 
 ## Description
 
@@ -32,14 +32,14 @@ from the R terminal:
 ```r
 install.packages(c('shiny', 'shinyBS', 'devtools'))
 library(devtools)
-install_github('mobiodiv/mobsim')
+install_github('albansagouis/mobsim')
 ```
 
 Once those dependencies are installed you can run the app from the R terminal using:
 
 ```r
 library(shiny)  
-runGitHub("mobiodiv/mobsim_app")
+runGitHub("albansagouis/mobsim_app@master")
 ```
 
 ## License
