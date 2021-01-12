@@ -103,7 +103,7 @@ navbarPage("Visualization of biodiversity pattern", selected = "Introduction",
                                     textInput(inputId = "spaspatcoef",label = p(Labels$spatcoef, tags$style(type = "text/css", "#spaspatcoef_icon {vertical-align: top;}"),
                                                                                 popify(bsButton("spaspatcoef_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
                                                                                        title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
-                                              value = initial$n_mother_points)
+                                              value = initial$mother_points)
                              )
                           ),
 
