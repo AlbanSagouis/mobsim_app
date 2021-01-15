@@ -31,15 +31,13 @@ from the R terminal:
 
 ```r
 install.packages(c('shiny', 'shinyBS','pals','shinyjs', 'devtools'))
-library(devtools)
-install_github('albansagouis/mobsim@master')
+devtools::install_github('albansagouis/mobsim@master')
 ```
 
 Once those dependencies are installed you can run the app from the R terminal using:
 
 ```r
-library(shiny)  
-runGitHub("albansagouis/mobsim_app", ref = "master")
+shiny::runGitHub("albansagouis/mobsim_app", ref = "master")
 ```
 
 ## License
