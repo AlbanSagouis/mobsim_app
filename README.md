@@ -30,7 +30,7 @@ The app can be run locally. Several R packages are required for locally hosting 
 from the R terminal:
 
 ```r
-install.packages(c('shiny', 'shinyBS', 'devtools'))
+install.packages(c('shiny', 'shinyBS','pals','shinyjs', 'devtools'))
 library(devtools)
 install_github('albansagouis/mobsim@master')
 ```
@@ -39,7 +39,7 @@ Once those dependencies are installed you can run the app from the R terminal us
 
 ```r
 library(shiny)  
-runGitHub("albansagouis/mobsim_app@master")
+runGitHub("albansagouis/mobsim_app", ref = "master")
 ```
 
 ## License
