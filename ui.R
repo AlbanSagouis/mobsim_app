@@ -62,6 +62,7 @@ navbarPage("Visualization of biodiversity pattern", selected = "Introduction",
            # 2 Space panel ----
            tabPanel("2 Space - Distribution simulation",
                     sidebarLayout(
+                       # * sidebar panel ----
                        sidebarPanel(
                           # h4("Creating a community"),
                           fluidRow(
@@ -148,13 +149,13 @@ navbarPage("Visualization of biodiversity pattern", selected = "Introduction",
                           plotOutput("spasad_plots"),
                           radioButtons("exercise_number", "Exercise number",
                                        choices = 2:3, selected = 2, inline = TRUE)
-                       ),
+                       ), # end of side bar panel
 
-
+# * main panel ----
                        mainPanel(
-                          textOutput("spaCommunity_text"),
+                          # textOutput("spaCommunity_text"),
                           plotOutput("spacom_plots")
-                       )
+                       ) # end of main panel
                     )
            ),
 
