@@ -429,8 +429,8 @@ navbarPage("Visualization of biodiversity pattern", selected = "Introduction",
                     bsPopover(id = "sbskeep_step_icon", title = Help$keep_step$title, content = Help$keep_step$content, placement = "bottom", trigger = "focus", options = NULL)
            ),
 
-           # Big Table panel ----
-           tabPanel("Big Table",
+           # Reproducibility Table panel ----
+           tabPanel("Reproducibility Table",
                     dataTableOutput("comparativeTable_output"),
                     verbatimTextOutput("comparativeTable_selected_simulations"),
                     fluidRow(

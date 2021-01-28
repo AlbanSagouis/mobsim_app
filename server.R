@@ -1998,7 +1998,7 @@ shinyServer(function(input, output, session) {
 
 
 
-   # Big table tab
+   # Reproducibility table tab
 
    session$userData$sim_ID <- 1
    values$comparativeTable <- empty_comparativeTable()
