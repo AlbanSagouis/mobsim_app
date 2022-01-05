@@ -70,18 +70,26 @@ shinyServer(function(input, output, session) {
 
    output$sadCVslider <- renderUI({
       switch(input$sadsad_type,
-             "lnorm" = sliderInput("sadcoef", label = p("CV (abundance)", tags$style(type = "text/css", "#sadCVslider_icon {vertical-align: top;}"),
-                                                        popify(bsButton("sadCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                               title = Help$CVsliderLnorm$title, content = Help$CVsliderLnorm$content, trigger = "focus")),
-                                   value = 1, min = 0, max = 5, step = 0.1, ticks = F),
-             "geom" = sliderInput("sadcoef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#sadCVslider_icon {vertical-align: top;}"),
-                                                       popify(bsButton("sadCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                              title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
-                                  value = 0.5,min = 0,max = 1,step = 0.05, ticks = F),
-             "ls" = textInput("sadcoef", label = p("Fisher's alpha parameter", tags$style(type = "text/css", "#sadCVslider_icon {vertical-align: top;}"),
-                                                   popify(bsButton("sadCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                          title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")),
-                              value = 1)
+             "lnorm" = sliderInput("sadcoef", label = p(
+                "CV (abundance)",
+                tags$style(type = "text/css", "#sadCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("sadCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLnorm$title, content = Help$CVsliderLnorm$content, trigger = "focus")
+             ),
+             value = 1, min = 0, max = 5, step = 0.1, ticks = F),
+             "geom" = sliderInput("sadcoef", label = p(
+                "Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#sadCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("sadCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
+                value = 0.5,min = 0,max = 1,step = 0.05, ticks = F),
+             "ls" = textInput("sadcoef", label = p(
+                "Fisher's alpha parameter", tags$style(type = "text/css", "#sadCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("sadCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")),
+                value = 1)
       )
    })
 
@@ -175,20 +183,28 @@ shinyServer(function(input, output, session) {
 
    output$spaCVslider <- renderUI({
       switch(input$spasad_type,
-             "lnorm" = sliderInput("spacoef", label = p("CV (abundance)", tags$style(type = "text/css", "#spaCVslider_icon {vertical-align: top;}"),
-                                                        popify(bsButton("spaCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                               title = Help$CVsliderLnorm$title, content = Help$CVsliderLnorm$content, trigger = "focus")),
-                                   value = 1, min = 0, max = 5, step = 0.1, ticks = F),
+             "lnorm" = sliderInput("spacoef", label = p(
+                "CV (abundance)", tags$style(type = "text/css", "#spaCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("spaCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLnorm$title, content = Help$CVsliderLnorm$content, trigger = "focus")
+             ),
+             value = 1, min = 0, max = 5, step = 0.1, ticks = F),
 
-             "geom" = sliderInput("spacoef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#spaCVslider_icon {vertical-align: top;}"),
-                                                       popify(bsButton("spaCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                              title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
-                                  value = 0.5, min = 0, max = 1 ,step = 0.05, ticks = F),
+             "geom" = sliderInput("spacoef", label = p(
+                "Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#spaCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("spaCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
+                value = 0.5, min = 0, max = 1 ,step = 0.05, ticks = F),
 
-             "ls" = textInput("spacoef", label = p("Fisher's alpha parameter", tags$style(type = "text/css", "#spaCVslider_icon {vertical-align: top;}"),
-                                                   popify(bsButton("spaCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                          title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")),
-                              value = 10)
+             "ls" = textInput("spacoef", label = p(
+                "Fisher's alpha parameter", tags$style(type = "text/css", "#spaCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("spaCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")
+             ),
+             value = 10)
       )
    })
 
@@ -243,21 +259,24 @@ shinyServer(function(input, output, session) {
                                        xrange = c(0,1),
                                        yrange = c(0,1))
          spa$simcom <- switch(input$spasad_type,
-                              "lnorm" = sim_thomas_community(s_pool = debounced_spaS(), n_sim = debounced_spaN(),
-                                                             sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                             sad_type = input$spasad_type, sad_coef = list(cv_abund = input$spacoef),
-                                                             fix_s_sim = T, seed = NULL,
-                                                             xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-                              "geom" = sim_thomas_community(s_pool = debounced_spaS(), n_sim = debounced_spaN(),
-                                                            sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                            sad_type = input$spasad_type, sad_coef = list(prob = input$spacoef),
-                                                            fix_s_sim = T, seed = NULL,
-                                                            xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-                              "ls" = sim_thomas_community(s_pool = NA, n_sim = debounced_spaN(),
-                                                          sad_type = input$spasad_type, sad_coef = list(N = debounced_spaN(),alpha = as.numeric(input$spacoef)),
-                                                          sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                          fix_s_sim = T, seed = NULL,
-                                                          xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
+                              "lnorm" = sim_thomas_community(
+                                 s_pool = debounced_spaS(), n_sim = debounced_spaN(),
+                                 sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                 sad_type = input$spasad_type, sad_coef = list(cv_abund = input$spacoef),
+                                 fix_s_sim = T, seed = NULL,
+                                 xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+                              "geom" = sim_thomas_community(
+                                 s_pool = debounced_spaS(), n_sim = debounced_spaN(),
+                                 sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                 sad_type = input$spasad_type, sad_coef = list(prob = input$spacoef),
+                                 fix_s_sim = T, seed = NULL,
+                                 xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+                              "ls" = sim_thomas_community(
+                                 s_pool = NA, n_sim = debounced_spaN(),
+                                 sad_type = input$spasad_type, sad_coef = list(N = debounced_spaN(),alpha = as.numeric(input$spacoef)),
+                                 sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                 fix_s_sim = T, seed = NULL,
+                                 xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
          )
       }
    }, ignoreNULL = FALSE)   # if TRUE, the fact that input$sadRestart is NULL before being clicked on once also prevents debounced_sadS() and debounced_sadN() to trigger the event
@@ -287,21 +306,24 @@ shinyServer(function(input, output, session) {
                                        yrange = c(0,1))
 
          simcomAddition <- switch(input$spaNewsad_type,
-                                  "lnorm" = sim_thomas_community(s_pool = input$spaNewS, n_sim = input$spaNewN,
-                                                                 sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                                 sad_type = input$spasad_type, sad_coef = list(cv_abund = input$spaNewcoef),
-                                                                 fix_s_sim = T, seed = NULL,
-                                                                 xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-                                  "geom" = sim_thomas_community(s_pool = input$spaNewS, n_sim = input$spaNewN,
-                                                                sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                                sad_type = input$spasad_type, sad_coef = list(prob = input$spaNewcoef),
-                                                                fix_s_sim = T, seed = NULL,
-                                                                xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-                                  "ls" = sim_thomas_community(s_pool = NA, n_sim = input$spaNewN,
-                                                              sad_type = input$spasad_type, sad_coef = list(N = input$spaNewN,alpha = as.numeric(input$spaNewcoef)),
-                                                              sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                              fix_s_sim = T, seed = NULL,
-                                                              xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
+                                  "lnorm" = sim_thomas_community(
+                                     s_pool = input$spaNewS, n_sim = input$spaNewN,
+                                     sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                     sad_type = input$spasad_type, sad_coef = list(cv_abund = input$spaNewcoef),
+                                     fix_s_sim = T, seed = NULL,
+                                     xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+                                  "geom" = sim_thomas_community(
+                                     s_pool = input$spaNewS, n_sim = input$spaNewN,
+                                     sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                     sad_type = input$spasad_type, sad_coef = list(prob = input$spaNewcoef),
+                                     fix_s_sim = T, seed = NULL,
+                                     xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+                                  "ls" = sim_thomas_community(
+                                     s_pool = NA, n_sim = input$spaNewN,
+                                     sad_type = input$spasad_type, sad_coef = list(N = input$spaNewN,alpha = as.numeric(input$spaNewcoef)),
+                                     sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                     fix_s_sim = T, seed = NULL,
+                                     xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
          )
 
 
@@ -478,10 +500,13 @@ shinyServer(function(input, output, session) {
       if (!input$method_type %in% c("random_mother_points","click_for_mother_points"))	{
          return()
       } else {
-         selectizeInput("sad_type", label = p(Labels$sad_type, tags$style(type = "text/css", "#sad_type_icon {vertical-align: top;}"),
-                                              popify(bsButton("sad_type_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                     title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom", trigger = "focus")),
-                        choices = c("lognormal" = "lnorm","geometric" = "geom","Fisher's log-series" = "ls"), selected = "lnorm")
+         selectizeInput("sad_type", label = p(
+            Labels$sad_type, tags$style(type = "text/css", "#sad_type_icon {vertical-align: top;}"),
+            popify(
+               bsButton("sad_type_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+               title = Help$select_sad_type$title, content = Help$select_sad_type$content, placement = "bottom", trigger = "focus")
+         ),
+         choices = c("lognormal" = "lnorm","geometric" = "geom","Fisher's log-series" = "ls"), selected = "lnorm")
       }
    })
 
@@ -490,18 +515,27 @@ shinyServer(function(input, output, session) {
       if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges") | is.null(input$sad_type))
          return()
       switch(input$sad_type,
-             "lnorm" = sliderInput("coef", label = p("CV (abundance)", tags$style(type = "text/css", "#CVsliderLnorm_icon {vertical-align: top;}"),
-                                                     popify(bsButton("CVsliderLnorm_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                            title = Help$CVsliderLnorm$title, content = Help$CVsliderLnorm$content, trigger = "focus")),
-                                   value = 1, min = 0, max = 5, step = 0.1, ticks = F),
-             "geom" = sliderInput("coef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#CVsliderGeom_icon {vertical-align: top;}"),
-                                                    popify(bsButton("CVsliderGeom_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                           title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
-                                  value = 0.5,min = 0,max = 1,step = 0.1, ticks = F),
-             "ls" = textInput("coef", label = p("Fisher's alpha parameter", tags$style(type = "text/css", "#CVsliderLs_icon {vertical-align: top;}"),
-                                                popify(bsButton("CVsliderLs_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                       title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")),
-                              value = 1)
+             "lnorm" = sliderInput("coef", label = p(
+                "CV (abundance)", tags$style(type = "text/css", "#CVsliderLnorm_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("CVsliderLnorm_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLnorm$title, content = Help$CVsliderLnorm$content, trigger = "focus")
+             ),
+             value = 1, min = 0, max = 5, step = 0.1, ticks = F),
+             "geom" = sliderInput("coef", label = p(
+                "Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#CVsliderGeom_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("CVsliderGeom_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")
+             ),
+             value = 0.5,min = 0,max = 1,step = 0.1, ticks = F),
+             "ls" = textInput("coef", label = p(
+                "Fisher's alpha parameter", tags$style(type = "text/css", "#CVsliderLs_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("CVsliderLs_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")
+             ),
+             value = 1)
       )
    })
 
@@ -509,10 +543,13 @@ shinyServer(function(input, output, session) {
       if (!input$method_type %in% c("random_mother_points","click_for_mother_points","click_for_species_ranges"))	{
          return()
       } else {
-         textInput(inputId = "spatagg", label = p(Labels$spatagg, tags$style(type = "text/css", "#spatagg_icon {vertical-align: top;}"),
-                                                  popify(bsButton("spatagg_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                         title = Help$spatagg$title, content = Help$spatagg$content, trigger = "focus")),
-                   value = 0.1)
+         textInput(inputId = "spatagg", label = p(
+            Labels$spatagg, tags$style(type = "text/css", "#spatagg_icon {vertical-align: top;}"),
+            popify(
+               bsButton("spatagg_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+               title = Help$spatagg$title, content = Help$spatagg$content, trigger = "focus")
+         ),
+         value = 0.1)
       }
    })
 
@@ -546,10 +583,13 @@ shinyServer(function(input, output, session) {
       if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
          return()
       } else {
-         selectizeInput(inputId = "spatdist", p(Labels$spatdist, tags$style(type = "text/css", "#spatdist_icon {vertical-align: top;}"),
-                                                popify(bsButton("spatdist_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                       title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")),
-                        choices = c("Number of mother points" = "n.mother", "Number of clusters" = "n.cluster"), selected = "n.mother")
+         selectizeInput(inputId = "spatdist", p(
+            Labels$spatdist, tags$style(type = "text/css", "#spatdist_icon {vertical-align: top;}"),
+            popify(
+               bsButton("spatdist_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+               title = Help$spatdist$title, content = Help$spatdist$content, trigger = "focus")
+         ),
+         choices = c("Number of mother points" = "n.mother", "Number of clusters" = "n.cluster"), selected = "n.mother")
       }
    })
 
@@ -557,10 +597,13 @@ shinyServer(function(input, output, session) {
       if (!input$method_type %in% c("random_mother_points","click_for_species_ranges"))	{
          return()
       } else {
-         textInput(inputId = "spatcoef",label = p(Labels$spatcoef, tags$style(type = "text/css", "#spatcoef_icon {vertical-align: top;}"),
-                                                  popify(bsButton("spatcoef_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                         title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")),
-                   value = "1")
+         textInput(inputId = "spatcoef",label = p(
+            Labels$spatcoef, tags$style(type = "text/css", "#spatcoef_icon {vertical-align: top;}"),
+            popify(
+               bsButton("spatcoef_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+               title = Help$spatcoef$title, content = Help$spatcoef$content, trigger = "focus")
+         ),
+         value = "1")
       }
    })
 
@@ -727,16 +770,19 @@ shinyServer(function(input, output, session) {
       if (input$method_type != "click_for_species_ranges")	{
          return()
       } else {
-         fileInput(inputId = "loaded_ranges", label = p("Choose a data.frame of ranges", tags$style(type = "text/css", "#species_range_uploading_tool_icon {vertical-align: top;}"),
-                                                        popify(bsButton("species_range_uploading_tool_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                               title = Help$species_range_uploading_tool$title,
-                                                               content = Help$species_range_uploading_tool$content,
-                                                               placement = "bottom", trigger = "focus")),
-                   multiple = FALSE,
-                   accept = c("text/csv",
-                              "text/comma-separated-values,text/plain",
-                              ".csv"), width = NULL,
-                   buttonLabel = "Browse...", placeholder = "No file selected")
+         fileInput(inputId = "loaded_ranges", label = p(
+            "Choose a data.frame of ranges", tags$style(type = "text/css", "#species_range_uploading_tool_icon {vertical-align: top;}"),
+            popify(
+               bsButton("species_range_uploading_tool_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+               title = Help$species_range_uploading_tool$title,
+               content = Help$species_range_uploading_tool$content,
+               placement = "bottom", trigger = "focus")
+         ),
+         multiple = FALSE,
+         accept = c("text/csv",
+                    "text/comma-separated-values,text/plain",
+                    ".csv"), width = NULL,
+         buttonLabel = "Browse...", placeholder = "No file selected")
       }
    })
 
@@ -767,14 +813,17 @@ shinyServer(function(input, output, session) {
       if (input$method_type != "uploading_community_data")	{
          return()
       } else {
-         fileInput(inputId = "loaded_file", label = p("Choose rData community File", tags$style(type = "text/css", "#community_uploading_tool_icon {vertical-align: top;}"),
-                                                      popify(bsButton("community_uploading_tool_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                             title = Help$community_uploading_tool$title,
-                                                             content = Help$community_uploading_tool$content,
-                                                             placement = "bottom", trigger = "focus")),
-                   multiple = FALSE,
-                   accept = "", width = NULL,
-                   buttonLabel = "Browse...", placeholder = "No file selected")
+         fileInput(inputId = "loaded_file", label = p(
+            "Choose rData community File", tags$style(type = "text/css", "#community_uploading_tool_icon {vertical-align: top;}"),
+            popify(
+               bsButton("community_uploading_tool_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+               title = Help$community_uploading_tool$title,
+               content = Help$community_uploading_tool$content,
+               placement = "bottom", trigger = "focus")
+         ),
+         multiple = FALSE,
+         accept = "", width = NULL,
+         buttonLabel = "Browse...", placeholder = "No file selected")
       }
    })
 
@@ -832,46 +881,48 @@ shinyServer(function(input, output, session) {
             if (input$spatdist == "n.mother") n.mother <- spatcoef_num else n.mother <- NA
             if (input$spatdist == "n.cluster") n.cluster <- spatcoef_num else n.cluster <- NA
 
-            simulation_parameters <- switch(input$method_type,
-                                            "random_mother_points" = list(mother_points = n.mother,
-                                                                          cluster_points = n.cluster,
-                                                                          xmother = NA,
-                                                                          ymother = NA,
-                                                                          xrange = c(0,1),
-                                                                          yrange = c(0,1)),
-                                            "click_for_mother_points" = list(mother_points = NA,
-                                                                             cluster_points = NA,
-                                                                             xmother = tapply(values$DT$x, values$DT$species_ID, list),
-                                                                             ymother = tapply(values$DT$y, values$DT$species_ID, list),
-                                                                             xrange = c(0,1),
-                                                                             yrange = c(0,1)),
-                                            "click_for_species_ranges" = list(mother_points = n.mother,
-                                                                              cluster_points = n.cluster,
-                                                                              xmother = NA,
-                                                                              ymother = NA,
-                                                                              xrange = data.frame(values$DT_species_ranges$xmin, values$DT_species_ranges$xmax),
-                                                                              yrange = data.frame(values$DT_species_ranges$ymin, values$DT_species_ranges$ymax))
+            simulation_parameters <- switch(
+               input$method_type,
+               "random_mother_points" = list(mother_points = n.mother,
+                                             cluster_points = n.cluster,
+                                             xmother = NA,
+                                             ymother = NA,
+                                             xrange = c(0,1),
+                                             yrange = c(0,1)),
+               "click_for_mother_points" = list(mother_points = NA,
+                                                cluster_points = NA,
+                                                xmother = tapply(values$DT$x, values$DT$species_ID, list),
+                                                ymother = tapply(values$DT$y, values$DT$species_ID, list),
+                                                xrange = c(0,1),
+                                                yrange = c(0,1)),
+               "click_for_species_ranges" = list(mother_points = n.mother,
+                                                 cluster_points = n.cluster,
+                                                 xmother = NA,
+                                                 ymother = NA,
+                                                 xrange = data.frame(values$DT_species_ranges$xmin, values$DT_species_ranges$xmax),
+                                                 yrange = data.frame(values$DT_species_ranges$ymin, values$DT_species_ranges$ymax))
             )
 
 
 
             # sim.com might rather be set as a reactive ({ }) that is then called sim.com(). is this more efficient ?
-            tempsim.com <- switch(input$sad_type,
-                                  "lnorm" = sim_thomas_community(s_pool = input$S, n_sim = input$N,
-                                                                 sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                                 sad_type = input$sad_type, sad_coef = list(cv_abund = input$coef),
-                                                                 fix_s_sim = T, seed = seed_simulation(),
-                                                                 xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-                                  "geom" = sim_thomas_community(s_pool = input$S, n_sim = input$N,
-                                                                sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                                sad_type = input$sad_type, sad_coef = list(prob = input$coef),
-                                                                fix_s_sim = T, seed = seed_simulation(),
-                                                                xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
-                                  "ls" = sim_thomas_community(s_pool = input$S, n_sim = input$N,
-                                                              sad_type = input$sad_type, sad_coef = list(N = input$N,alpha = as.numeric(input$coef)),
-                                                              sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                                              fix_s_sim = T, seed = seed_simulation(),
-                                                              xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
+            tempsim.com <- switch(
+               input$sad_type,
+               "lnorm" = sim_thomas_community(s_pool = input$S, n_sim = input$N,
+                                              sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                              sad_type = input$sad_type, sad_coef = list(cv_abund = input$coef),
+                                              fix_s_sim = T, seed = seed_simulation(),
+                                              xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+               "geom" = sim_thomas_community(s_pool = input$S, n_sim = input$N,
+                                             sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                             sad_type = input$sad_type, sad_coef = list(prob = input$coef),
+                                             fix_s_sim = T, seed = seed_simulation(),
+                                             xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+               "ls" = sim_thomas_community(s_pool = input$S, n_sim = input$N,
+                                           sad_type = input$sad_type, sad_coef = list(N = input$N,alpha = as.numeric(input$coef)),
+                                           sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points, xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+                                           fix_s_sim = T, seed = seed_simulation(),
+                                           xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
             )
          } else {
             tempsim.com <- get(load(input$loaded_file$datapath))
@@ -1149,7 +1200,7 @@ shinyServer(function(input, output, session) {
       isolate({
          plot(spec_sample_curve(sim.com(), method = "rarefaction"), xlim = ranges$x, ylim = ranges$y, log = rarefaction_curves_loglog())
          lines(rare_curve(apply(sampling_quadrats()$spec_dat, 2, sum)), lwd = 3, col = "limegreen")	# Drawing gamma scale curve
-         lapply(rarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha = 0.5))	# Drawing all alpha scale curves
+         lapply(rarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha.f = 0.5))	# Drawing all alpha scale curves
          # for (site in names(rarefaction_curves_list())) {		# verification aid
          # temp = rarefaction_curves_list()[[site]]
          # text(gsub(site, pattern = "site", replacement = ""), x = 10, y = temp[10])
@@ -1179,7 +1230,7 @@ shinyServer(function(input, output, session) {
       isolate({
          plot(spec_sample_curve(sim.com(), method = "rarefaction"), xlim = ranges$x, ylim = ranges$y, log = rarefaction_curves_loglog())
          lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, sum)), lwd = 3, col = "limegreen")	# Drawing gamma scale curve
-         lapply(previous_rarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha = 0.5))	# Drawing all alpha scale curves
+         lapply(previous_rarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha.f = 0.5))	# Drawing all alpha scale curves
          # for (site in names(previous_rarefaction_curves_list())) {		# verification aid
          # temp = previous_rarefaction_curves_list()[[site]]
          # text(gsub(site, pattern = "site", replacement = ""), x = 10, y = temp[10])
@@ -1284,7 +1335,7 @@ shinyServer(function(input, output, session) {
          isolate({
             plot(spec_sample_curve(sim.com(), method = "rarefaction"), xlim = ranges$x, ylim = ranges$y, log = rarefaction_curves_loglog())
             lines(rare_curve(apply(session$userData$previous_sampled_quadrats$spec_dat, 2, sum)), lwd = 3, col = "limegreen")	# Drawing gamma scale curve
-            lapply(previous_rarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha = 0.5))	# Drawing all alpha scale curves
+            lapply(previous_rarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha.f = 0.5))	# Drawing all alpha scale curves
             # for (site in names(previous_rarefaction_curves_list())) {		# verification aid
             # temp = previous_rarefaction_curves_list()[[site]]
             # text(gsub(site, pattern = "site", replacement = ""), x = 10, y = temp[10])
@@ -1395,18 +1446,27 @@ shinyServer(function(input, output, session) {
 
    output$sbsCVslider <- renderUI({
       switch(input$sbssad_type,
-             "lnorm" = sliderInput("sbscoef", label = p("CV (abundance)", tags$style(type = "text/css", "#sbsCVslider_icon {vertical-align: top;}"),
-                                                        popify(bsButton("sbsCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                               title = Help$CVsliderLnrom$title, content = Help$CVsliderLnorm$content, trigger = "focus")),
-                                   value = 1, min = 0, max = 5, step = 0.1, ticks = F),
-             "geom" = sliderInput("sbscoef", label = p("Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#sbsCVslider_icon {vertical-align: top;}"),
-                                                       popify(bsButton("sbsCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                              title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")),
-                                  value = 0.5, min = 0, max = 1, step = 0.1, ticks = F),
-             "ls" = textInput("sbscoef", label = p("Fisher's alpha parameter", tags$style(type = "text/css", "#sbsCVslider_icon {vertical-align: top;}"),
-                                                   popify(bsButton("sbsCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
-                                                          title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")),
-                              value = 1)
+             "lnorm" = sliderInput("sbscoef", label = p(
+                "CV (abundance)", tags$style(type = "text/css", "#sbsCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("sbsCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLnrom$title, content = Help$CVsliderLnorm$content, trigger = "focus")
+             ),
+             value = 1, min = 0, max = 5, step = 0.1, ticks = F),
+             "geom" = sliderInput("sbscoef", label = p(
+                "Probability of success in each trial. 0 < prob <= 1", tags$style(type = "text/css", "#sbsCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("sbsCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderGeom$title, content = Help$CVsliderGeom$short_content, trigger = "focus")
+             ),
+             value = 0.5, min = 0, max = 1, step = 0.1, ticks = F),
+             "ls" = textInput("sbscoef", label = p(
+                "Fisher's alpha parameter", tags$style(type = "text/css", "#sbsCVslider_icon {vertical-align: top;}"),
+                popify(
+                   bsButton("sbsCVslider_icon", label = "", icon = icon("question-circle"), size = "extra-small"),
+                   title = Help$CVsliderLs$title, content = Help$CVsliderLs$content, trigger = "focus")
+             ),
+             value = 1)
       )
    })
 
@@ -1433,27 +1493,31 @@ shinyServer(function(input, output, session) {
                                        yrange = c(0,1))
 
 
-         switch(input$sbssad_type,
-                "lnorm" = sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN,
-                                               sad_type = input$sbssad_type, sad_coef = list(cv_abund = input$sbscoef),
-                                               fix_s_sim = T, seed = seed_simulation(),
-                                               sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points,
-                                               xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                               xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+         switch(
+            input$sbssad_type,
+            "lnorm" = sim_thomas_community(
+               s_pool = input$sbsS, n_sim = input$sbsN,
+               sad_type = input$sbssad_type, sad_coef = list(cv_abund = input$sbscoef),
+               fix_s_sim = T, seed = seed_simulation(),
+               sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points,
+               xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+               xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
 
-                "geom" = sim_thomas_community(s_pool = input$sbsS, n_sim = input$sbsN,
-                                              sad_type = input$sbssad_type, sad_coef = list(prob = input$sbscoef),
-                                              fix_s_sim = T, seed = seed_simulation(),
-                                              sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points,
-                                              xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                              xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
+            "geom" = sim_thomas_community(
+               s_pool = input$sbsS, n_sim = input$sbsN,
+               sad_type = input$sbssad_type, sad_coef = list(prob = input$sbscoef),
+               fix_s_sim = T, seed = seed_simulation(),
+               sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points,
+               xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+               xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange),
 
-                "ls" = sim_thomas_community(s_pool = NA, n_sim = input$sbsN,
-                                            sad_type = input$sbssad_type, sad_coef = list(N = input$sbsN, alpha = as.numeric(input$sbscoef)),
-                                            fix_s_sim = T, seed = seed_simulation(),
-                                            sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points,
-                                            xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
-                                            xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
+            "ls" = sim_thomas_community(
+               s_pool = NA, n_sim = input$sbsN,
+               sad_type = input$sbssad_type, sad_coef = list(N = input$sbsN, alpha = as.numeric(input$sbscoef)),
+               fix_s_sim = T, seed = seed_simulation(),
+               sigma = spatagg_num, mother_points = simulation_parameters$mother_points, cluster_points = simulation_parameters$cluster_points,
+               xmother = simulation_parameters$xmother, ymother = simulation_parameters$ymother,
+               xrange = simulation_parameters$xrange, yrange = simulation_parameters$yrange)
          )
 
          # session$userData$sbsprevious.sim.com <- sbssim.com()
@@ -1581,7 +1645,7 @@ shinyServer(function(input, output, session) {
       isolate({
          plot(spec_sample_curve(sbssim.com(), method = "rarefaction"), xlim = sbsvalues$ranges$x, ylim = sbsvalues$ranges$y, log = rarefaction_curves_loglog())
          lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, sum)), lwd = 3, col = "limegreen")	# Drawing gamma scale curve
-         lapply(sbsrarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha = 0.5))	# Drawing all alpha scale curves
+         lapply(sbsrarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha.f = 0.5))	# Drawing all alpha scale curves
          # for (site in names(sbsrarefaction_curves_list())) {		# verification aid
          # temp = sbsrarefaction_curves_list()[[site]]
          # text(gsub(site, pattern = "site", replacement = ""), x = 10, y = temp[10])
@@ -1721,7 +1785,7 @@ shinyServer(function(input, output, session) {
             isolate({
                plot(spec_sample_curve(sbssim.com(), method = "rarefaction"), xlim = sbsvalues$ranges$x, ylim = sbsvalues$ranges$y, log = rarefaction_curves_loglog())
                lines(rare_curve(apply(sbssampling_quadrats()$spec_dat, 2, sum)), lwd = 3, col = "limegreen")	# Drawing gamma scale curve
-               lapply(sbsrarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha = 0.5))	# Drawing all alpha scale curves
+               lapply(sbsrarefaction_curves_list(), lines, lwd = 2, col = adjustcolor("green", alpha.f = 0.5))	# Drawing all alpha scale curves
             })
          })
 
@@ -1814,7 +1878,7 @@ shinyServer(function(input, output, session) {
                if ("Rarefaction curve" %in% input$compplot_types) {
                   plot(spec_sample_curve(sim$community, method = "rarefaction"), log = rarefaction_curves_loglog())	# Plotting rarefaction curves
                   lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, sum)), lwd = 3, col = "limegreen")	# Drawing gamma scale curve
-                  lapply(sim$rarefaction_curve_list, lines, lwd = 2, col = adjustcolor("green", alpha = 0.5))	# Drawing all alpha scale curves
+                  lapply(sim$rarefaction_curve_list, lines, lwd = 2, col = adjustcolor("green", alpha.f = 0.5))	# Drawing all alpha scale curves
                }
                if ("Distance decay" %in% input$compplot_types) {
                   plot(dist_decay_quadrats(sim$sampled_quadrats, method = "bray", binary = F), ylim = c(0,1))	# Plotting distance decay
@@ -1845,7 +1909,7 @@ shinyServer(function(input, output, session) {
 
             lapply(simlist(), function(sim)	{	# gamma scale
                lines(rare_curve(apply(sim$sampled_quadrats$spec_dat, 2, sum)), lwd = 3, col = colorList[as.character(sim$sim_ID)])
-               lapply(sim$rarefaction_curve_list, lines, lwd = 2, col = adjustcolor(colorList[as.character(sim$sim_ID)], alpha = 0.5))	# alpha scale curves
+               lapply(sim$rarefaction_curve_list, lines, lwd = 2, col = adjustcolor(colorList[as.character(sim$sim_ID)], alpha.f = 0.5))	# alpha scale curves
             })
             legend("topleft", legend = names(colorList), col = colorList, bty = "n", pch = 19)
          }
@@ -1931,8 +1995,8 @@ shinyServer(function(input, output, session) {
 
 
 
-   # GRAPHICAL PARAMETERS TAB
-   ## Palettes
+   # GRAPHICAL PARAMETERS TAB ----
+   ## Palettes ----
 
    observe({
       updateSelectInput(session, "color_palette", selected = color_palette())
@@ -1980,7 +2044,7 @@ shinyServer(function(input, output, session) {
 
 
 
-   # HELP ICONS
+   # HELP ICONS ----
 
    output$simulation_seed_icon <- renderUI(icon("question-circle"))
    output$sampling_seed_icon <- renderUI(icon("question-circle"))
@@ -1998,14 +2062,14 @@ shinyServer(function(input, output, session) {
 
 
 
-   # Reproducibility table tab
+   # Reproducibility table tab ----
 
    session$userData$sim_ID <- 1
    values$comparativeTable <- empty_comparativeTable()
 
-   ## Adding rows to the simulation table
-   ### From Simulation and sampling tabs
-   #### Restart button
+   ## Adding rows to the simulation table ----
+   ### From Simulation and sampling tabs ----
+   #### Restart button ----
    observeEvent(
       input$Restart, {
 
@@ -2029,7 +2093,7 @@ shinyServer(function(input, output, session) {
             ))
          })
       })
-   #### New sampling button
+   #### New sampling button ----
    observeEvent(
       input$new_sampling_button, {
 
@@ -2054,8 +2118,8 @@ shinyServer(function(input, output, session) {
          })
       })
 
-   ### From step-by-step tab
-   #### Restart button
+   ### From step-by-step tab ----
+   #### Restart button ----
    observeEvent(
       input$sbsRestart, {
 
@@ -2079,7 +2143,7 @@ shinyServer(function(input, output, session) {
             ))
          })
       })
-   #### New sampling button
+   #### New sampling button ----
    observeEvent(
       input$sbsnew_sampling_button, {
 
@@ -2104,17 +2168,17 @@ shinyServer(function(input, output, session) {
          })
       })
 
-   ## Remove all simulations
+   ## Remove all simulations ----
    observeEvent(input$rem_all_simulations, {
       values$comparativeTable <- empty_comparativeTable()
    })
 
-   ## Remove selected simulations
+   ## Remove selected simulations ----
    observeEvent(input$rem_selected_simulations, {
       values$comparativeTable <- values$comparativeTable[-as.numeric(input$comparativeTable_output_rows_selected), ]
    })
 
-   ## Download simulation table
+   ## Download simulation table ----
    output$downloadSimulationTable <- downloadHandler(
       filename = function() {paste("Simulation_table.csv", sep = "")},
       content  = function(fname) {
@@ -2122,7 +2186,7 @@ shinyServer(function(input, output, session) {
       }
    )
 
-   ## render comparativeTable
+   ## render comparativeTable ----
    output$comparativeTable_output <- renderDataTable(
       DT::datatable(values$comparativeTable, options = list(searching = FALSE, pageLength = 20))
    )
@@ -2133,5 +2197,5 @@ shinyServer(function(input, output, session) {
 
 
 
-}) # end of server()
+}) # end of server() ----
 
