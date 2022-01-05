@@ -10,7 +10,7 @@ This is an interactive tool that aims to simulate and visualize multiple biodive
 
 * **total number of individuals**, 
 * **total number of species**, 
-* the coefficient of variation in the species-abundance distribution that determines the **eveness of the abundances**,
+* the coefficient of variation in the species-abundance distribution that determines the **evenness of the abundances**,
 * **spatial aggregation of species**.
 
 The tool   
