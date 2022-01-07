@@ -17,11 +17,11 @@ source("extras/help/Help.r", local = TRUE)
 source("extras/help/Labels.r", local = TRUE)
 source("extras/graphical_parameters.R", local = TRUE)
 source("extras/initial_values.R", local = TRUE)
-# Define UI for slider demo application
 
 navbarPage(
-   "Visualization of biodiversity pattern", selected = "Introduction",
+   title = "Visualization of biodiversity pattern", selected = "Introduction",
    shinyjs::useShinyjs(),
+
    # Introduction panel ----
    tabPanel("Introduction", includeMarkdown("introduction.md")),
 
@@ -280,7 +280,7 @@ navbarPage(
                # Download sim.com action button
                downloadButton("downloadData", "Download community object"),
                # Check box
-               checkboxInput(input = 'keepInteractivePlot', label = 'Keep this simulation plot', value = FALSE)
+               checkboxInput(inputId = 'keepInteractivePlot', label = 'Keep this simulation plot', value = FALSE)
       ),
 
       fluidRow(align = "center",
@@ -355,6 +355,12 @@ navbarPage(
       bsPopover(id = "rarefaction_curves_plot", title = Help$rarefaction_curves_plot$title, content = Help$rarefaction_curves_plot$content, trigger = "hover"),
       bsPopover(id = "sampling_plot", title = Help$sampling_plot$title, content = Help$sampling_plot$content, placement = "top", trigger = "hover")
    ),
+
+
+
+
+
+
 
    # Step-by-step panel ----
    tabPanel(
