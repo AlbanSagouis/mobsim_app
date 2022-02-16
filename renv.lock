@@ -64,10 +64,10 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.7",
+      "Version": "1.0.8",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "dab19adae4440ae55aa8a9d238b246bb",
+      "Hash": "22b546dd7e337f6c0c58a39983a496bc",
       "Requirements": []
     },
     "VGAM": {
@@ -178,14 +178,6 @@
         "jsonlite",
         "lazyeval"
       ]
-    },
-    "data.table": {
-      "Package": "data.table",
-      "Version": "1.14.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "36b67b5adf57b292923f5659f5f0c853",
-      "Requirements": []
     },
     "dichromat": {
       "Package": "dichromat",
@@ -400,18 +392,12 @@
     },
     "mobsim": {
       "Package": "mobsim",
-      "Version": "0.2.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "mobsim",
-      "RemoteUsername": "albansagouis",
-      "RemoteRef": "master",
-      "RemoteSha": "26942fb23afde883e6934a2d08122e03b8dac38d",
-      "Hash": "9d2ee4a2f3338af02d416e53704e83a7",
+      "Version": "0.2.9001",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0c083fbc1f112044efe06bc4abf64799",
       "Requirements": [
         "Rcpp",
-        "data.table",
         "sads",
         "vegan"
       ]
@@ -457,10 +443,10 @@
     },
     "permute": {
       "Package": "permute",
-      "Version": "0.9-5",
+      "Version": "0.9-7",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "e367efa1f0d52cb753bdb9163b63f528",
+      "Hash": "abf0ca85c1c752e0d04f46334e635046",
       "Requirements": []
     },
     "poilog": {
