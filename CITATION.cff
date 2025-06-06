@@ -1,8 +1,20 @@
-bibentry(
-  "Manual",
-  title = "Simulation and visualisation of biodiversity patterns across spatial scales using the `mobsim` package",
-  author = "Katharina Gerstner, Felix May, Dan McGlinn and Alban Sagouis",
-  year = 2025,
-  url = "https://github.com/albansagouis/mobsim_app",
-  doi = "https://doi.org/10.5281/zenodo.15606592"
-)
+cff-version: 1.2.0
+message: "If you use this tool, please cite this work as below."
+authors:
+  - family-names: Gerstner
+    given-names: Katharina
+  - family-names: May
+    given-names: Felix
+    orcid: https://orcid.org/0000-0002-1106-8188
+  - family-names: McGlinn
+    given-names: Dan
+    orcid: https://orcid.org/0000-0003-2359-3526
+  - family-names: Sagouis
+    given-names: Alban
+    orcid: https://orcid.org/0000-0002-3827-1063
+title: Simulation and visualisation of biodiversity patterns across spatial scales using the `mobsim` package
+version: v1.0.2
+date-released: 2023-05-31
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15606592
