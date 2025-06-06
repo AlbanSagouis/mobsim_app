@@ -1,8 +1,0 @@
-bibentry(
-  "Manual",
-  title = "Simulation and visualisation of biodiversity patterns across spatial scales using the `mobsim` package",
-  author = "Katharina Gerstner, Felix May, Dan McGlinn and Alban Sagouis",
-  year = 2025,
-  url = "https://github.com/albansagouis/mobsim_app",
-  doi = "https://doi.org/10.5281/zenodo.15606592"
-)
